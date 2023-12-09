@@ -1,2 +1,5 @@
-/data/*
-!/data/.gitkeep
+# dataディレクトリ下のすべてのファイルを無視
+data/*
+
+# ただし、.gitkeepファイルは除外
+!data/**/.gitkeep
