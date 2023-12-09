@@ -2,9 +2,13 @@
  このファイルは、前処理としてデータクレンジングを行うためのファイルです。
  TODO：zipcodeの8桁以上のデータ、「.」が入っているデータをnanにする
 　TODO：user_info.csvの不正データ洗い出し
+ TODO:club_coinカラムに-の値が18個あり。QA返答待ち
+ TODO:recycle_pointカラムに-の値が9個あり。QA返答待ち
+ TODO:
 """
 from itertools import islice
 import pandas as pd
+import numpy as np
 
 
 def check_integer(df, column_name_list):
@@ -64,17 +68,31 @@ def fix_csv_file(input_file, output_file, chunk_size=30000):
 userDf = pd.read_csv('data/input/user_info.csv')
 # Nが入っているため、nanに変換してから型を統一する→nanで処理できるモデルがあるため
 userDf = userDf.replace('N', float('nan'))
-print('------------------- 1 ----------------------')
-print(userDf.info())
-check_integer(userDf, ['club_coin', 'recycle_point',
-                       'recycle_amount_after_gold_member', 'zipcode'])
+
+# check_integer(userDf, ['club_coin', 'recycle_point',
+#                        'recycle_amount_after_gold_member', 'zipcode'])
 
 userDf['birth_day'] = pd.to_datetime(userDf['birth_day'], errors='coerce')
 column_types = {
     'total_recycle_amount': float,
     'recycle_amount_per_year': float,
     'rank_continuation_class': int,
+    'zipcode':str
 }
+
+# 8桁以上のzipcode
+# userDf['zipcode'] = userDf['zipcode'].apply(lambda x: np.nan if len(str(x)) >= 8 else x)
+
+# zipcode = userDf[userDf['zipcode'].isna()]
+# print("Rows with negative values in 'club_coin':")
+# print(zipcode)
+
+column_type = userDf['zipcode'].apply(type).unique()
+print(column_type)
+
+# dfはあなたのデータフレームです
+long_zipcode_rows = userDf[userDf['zipcode'].apply(lambda x: (len(str(x)) >= 8 or len(str(x)) <= 6) and not pd.isna(x))]
+print(long_zipcode_rows)
 
 userDf = userDf.astype(column_types)
 print('------------------- 2 ----------------------')
