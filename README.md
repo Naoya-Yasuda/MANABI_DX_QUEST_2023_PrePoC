@@ -6,28 +6,28 @@
 jsonファイルで、諸設定を記載しています。  
 記載している情報は「利用している特徴量」「学習器のパラメータ」などです。  
 
-{
-"features": [
-"age",
-"embarked",
-"family_size",
-"fare",
-"pclass",
-"sex"
-],
-"lgbm_params": {
-"learning_rate": 0.1,
-"num_leaves": 8,
-"boosting_type": "gbdt",
-"colsample_bytree": 0.65,
-"reg_alpha": 1,
-"reg_lambda": 1,
-"objective": "multiclass",
-"num_class": 2
-},
-"loss": "multi_logloss",
-"target_name": "Survived",
-"ID_name": "PassengerId"
+{  
+  "features": [  
+  "age",  
+  "embarked",  
+  "family_size",  
+  "fare",  
+  "pclass",  
+  "sex"  
+],  
+  "lgbm_params": {  
+  "learning_rate": 0.1,  
+  "num_leaves": 8,  
+  "boosting_type": "gbdt",  
+  "colsample_bytree": 0.65,  
+  "reg_alpha": 1,  
+  "reg_lambda": 1,  
+  "objective": "multiclass",  
+  "num_class": 2  
+},  
+  "loss": "multi_logloss",  
+  "target_name": "Survived",  
+  "ID_name": "PassengerId"  
 }  
 
 またコンペのデータに依存するカラム名なども、このjsonファイルから読み取る形式にしています。
