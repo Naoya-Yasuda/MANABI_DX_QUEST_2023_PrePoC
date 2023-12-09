@@ -2,9 +2,9 @@
 【マナビDXクエスト】PatchWorksのプレPoC用のレポジトリです。
 
 # 環境構築
-conda create -n patchworks python=3.11.5
-conda activate patchworks
-pip install -r requirements.txt
+conda create -n patchworks python=3.11.5  
+conda activate patchworks  
+pip install -r requirements.txt  
 
 # フォルダ構成
 ## configs
