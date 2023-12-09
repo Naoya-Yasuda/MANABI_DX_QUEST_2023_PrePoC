@@ -1,6 +1,5 @@
 """
  このファイルは、前処理としてデータクレンジングを行うためのファイルです。
- TODO：zipcodeの8桁以上のデータ、「.」が入っているデータをnanにする
 　TODO：user_info.csvの不正データ洗い出し
  TODO:club_coinカラムに-の値が18個あり。QA返答待ち
  TODO:recycle_pointカラムに-の値が9個あり。QA返答待ち
@@ -67,7 +66,7 @@ def fix_csv_file(input_file, output_file, chunk_size=30000):
 # assets配下のcsvデータをそれぞれ読み込む
 userDf = pd.read_csv('data/input/user_info.csv')
 # Nが入っているため、nanに変換してから型を統一する→nanで処理できるモデルがあるため
-userDf = userDf.replace('N', float('nan'))
+userDf = userDf.replace('N', np.nan)
 
 # check_integer(userDf, ['club_coin', 'recycle_point',
 #                        'recycle_amount_after_gold_member', 'zipcode'])
@@ -77,30 +76,14 @@ column_types = {
     'total_recycle_amount': float,
     'recycle_amount_per_year': float,
     'rank_continuation_class': int,
-    'zipcode':str
+    'zipcode': str
 }
-
-# 8桁以上のzipcode
-# userDf['zipcode'] = userDf['zipcode'].apply(lambda x: np.nan if len(str(x)) >= 8 else x)
-
-# zipcode = userDf[userDf['zipcode'].isna()]
-# print("Rows with negative values in 'club_coin':")
-# print(zipcode)
-
-column_type = userDf['zipcode'].apply(type).unique()
-print(column_type)
-
-# dfはあなたのデータフレームです
-long_zipcode_rows = userDf[userDf['zipcode'].apply(lambda x: (len(str(x)) >= 8 or len(str(x)) <= 6) and not pd.isna(x))]
-print(long_zipcode_rows)
-
-userDf = userDf.astype(column_types)
-print('------------------- 2 ----------------------')
-print(userDf.info())
-
-# print(userDf)
-# print(userDf.shape)
-
+# zipcodeがfloatgata型になっているため、「.0」が付与されている。これを削除する。
+userDf['zipcode'] = userDf['zipcode'].apply(
+    lambda x: str(float(x)).replace('.0', ''))
+# 長さが7桁でないzipcodeをNaNに置換する処理
+userDf['zipcode'] = userDf['zipcode'].apply(
+    lambda x: np.nan if len(x) != 7 else x)
 
 # data2 = pd.read_csv('data/input/point_history.csv')
 # print(data2)
