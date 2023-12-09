@@ -2,4 +2,5 @@
 data/*
 
 # ただし、.gitkeepファイルは除外
-!data/**/.gitkeep
+!data/input/.gitkeep
+!data/output/.gitkeep
