@@ -1,6 +1,11 @@
 # PatchWorks_PrePoC
 【マナビDXクエスト】PatchWorksのプレPoC用のレポジトリです。
 
+# 環境構築
+conda create -n patchworks python=3.11.5
+conda activate patchworks
+pip install -r requirements.txt
+
 # フォルダ構成
 ## configs
 jsonファイルで、諸設定を記載しています。  
@@ -54,3 +59,6 @@ logsフォルダには、計算の実行ごとに下記の情報などを出力�
 
 ## 参考
 [upuraのブログ](https://upura.hatenablog.com/entry/2018/12/28/225234)
+
+
+
