@@ -84,6 +84,29 @@ userDf['zipcode'] = userDf['zipcode'].apply(
 # 長さが7桁でないzipcodeをNaNに置換する処理
 userDf['zipcode'] = userDf['zipcode'].apply(
     lambda x: np.nan if len(x) != 7 else x)
+print('----------1-----------')
+
+# 'birth_day'が'1910-01-01'以前の行をフィルタリング 31行
+filtered_by_birth_day = userDf[userDf['birth_day'] <= '1910-01-01']
+# TODO: birth_dayをどうするか検討中
+# birth_day_rows = userDf['birth_day'].apply(
+#     lambda x: np.NaN if pd.to_datetime(x) < pd.to_datetime('1910-01-01') else x)
+
+# userDf['birth_day'] = pd.to_datetime(userDf['birth_day']).dt.date
+
+# print(filtered_by_birth_day)
+
+# inaffected_coinは全てNaNを確認済み
+# TODO: カラム削除する
+filtered_by_inaffected_coin = userDf[userDf['inaffected_coin'].notna()]
+print(filtered_by_inaffected_coin)
+
+# 性別は三種類(男・女・無回答)を確認ずみ
+# TODO: 区分値に変更予定　draftとして0, 1, 2の区分値を持つ単一のカラムに変更する。
+# 男カラム・女カラムの2つ（ワンホットエンコーディング）は複雑な機械学習モデルを使用する場合に必要になるかも
+userDf['gender'] = userDf['gender'].apply(
+    lambda x: 0 if x == '男' else (1 if x == '女' else 2))
+print(userDf['gender'].unique())
 
 # data2 = pd.read_csv('data/input/point_history.csv')
 # print(data2)
