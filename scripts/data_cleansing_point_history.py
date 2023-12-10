@@ -48,6 +48,17 @@ def create_cleansing_csv():
     chunk_df.to_csv('data/input/point_history_cleansing.csv', index=False)
 
 
+def isunique_columns(df, column1, column2):
+    # column1とcolumn2の組み合わせで新しいカラムを作成
+    df['combined'] = df[column1].astype(str) + '_' + df[column2].astype(str)
+
+    # 新しいカラムのユニークな値を取得
+    unique_combinations = df['combined'].unique()
+
+    print(unique_combinations)
+    df = df.drop(columns=['combined'])
+
+
 if __name__ == '__main__':
     # 表示する最大列数を設定（例: Noneは無制限を意味します）
     pd.set_option('display.max_columns', 100)
@@ -95,6 +106,7 @@ if __name__ == '__main__':
     }
     df = df.astype(column_types)
 
+    # print(df[df['series_id'].isna() & ~(df['series'].isna())])
     # print(df[df['use_date'] > pd.to_datetime('2023-12-06')])
     # print(df[df['created_at'] > pd.to_datetime('2023-12-06')])
     # print(df[df['updated_at'] > pd.to_datetime('2023-12-06')])
@@ -110,10 +122,16 @@ if __name__ == '__main__':
     df = df.rename(columns={'item_id': 'リサイクル分類ID'})
 
     # 不正な行削除
-    df = df[df['amount'] >= 0]    # amount(持ち込み量)が負の値を削除
-    df = df[df['amount_kg'] >= 0]    # amount_kg(持ち込み量kg)が負の値を削除
-    df = df[df['point'] >= 0]    # point(RPSのポイント)が負の値を削除 TODO: QAの返答待ち
-    df = df[df['total_point'] >= 0]    # total_point(RPSのポイント)が負の値を削除
+    df = df[(df['amount'] >= 0) | df['amount'].isna()]    # amount(持ち込み量)が負の値を削除
+    df = df[(df['amount_kg'] >= 0) | df['amount_kg'].isna()]    # amount_kg(持ち込み量kg)が負の値を削除
+    df = df[(df['point'] >= 0) | df['point'].isna()]    # point(RPSのポイント)が負の値を削除 TODO: QAの返答待ち
+    df = df[(df['total_point'] >= 0) | df['total_point'].isna()]    # total_point(RPSのポイント)が負の値を削除
     # 列削除
-    df = df.drop(columns=['unit_id', 'prefectures', 'municipality'])
-    # print(df)
+    df = df.drop(columns=['unit_id', 'prefectures', 'municipality', 'series','address'])
+
+
+
+    
+    # csv書き出し
+    df.to_csv('data/input/point_history_cleansing_2.csv', index=True)
+
