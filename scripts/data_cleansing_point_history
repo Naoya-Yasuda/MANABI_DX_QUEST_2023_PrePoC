@@ -1,0 +1,51 @@
+from itertools import islice
+import pandas as pd
+import numpy as np
+
+
+def process_chunk(df):
+    """
+    arges:
+        df: DataFrame
+    return:
+        df: DataFrame
+    【列削除】
+    shop_url、free_text、rps_target_store、collect_item（必要ない）
+    record_id（Nの行多い）
+    other_shop_id, deactivated_flg, is_search_result_display（不明なデータのため）
+
+    【行削除】
+    item_idが1以外の行（古紙以外はcoinの付与がない、今回はぐるっとポンに絞る）
+    superまたはuser_idにNanあり
+    """
+    # 列削除
+    df = df.drop(columns=['shop_url', 'free_text', 'rps_target_store', 'collect_item', 'record_id',
+                          'other_shop_id', 'deactivated_flg', 'is_search_result_display'])
+
+    # 行削除
+    df = df[df['item_id'] == 1]
+    df = df.dropna(subset=['super', 'user_id'])
+
+    return df
+
+
+
+if __name__ == '__main__':
+    chunk_size = 10e5  # 一度に読み込む行数
+    chunk_df = pd.DataFrame()  # 各チャンクを保存するためのdataframe
+
+    count = 0
+    for chunk in pd.read_csv('data/input/point_history.csv', chunksize=chunk_size):
+        # ここで各チャンクに対してデータクレンジング処理を行う
+        # 例：欠損値の処理、型変換、フィルタリングなど
+        df = process_chunk(chunk)
+
+        # 処理済みのチャンクをリストに追加
+        #chunks.append(processed_chunk)
+        #chunks.append(chunk)
+        #df.to_csv('data/input/point_history_cleansing_'+str(count)+'.csv', index=False)    
+        #count += 1
+        chunk_df = pd.concat([chunk_df, df], ignore_index=True)
+
+    # 最終的なDataFrameをCSVファイルとして保存
+    chunk_df.to_csv('data/output/point_history_cleansing.csv', index=False)

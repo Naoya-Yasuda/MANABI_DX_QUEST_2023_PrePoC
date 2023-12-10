@@ -11,6 +11,7 @@ pip install -r requirements.txt
 jsonファイルで、諸設定を記載しています。  
 記載している情報は「利用している特徴量」「学習器のパラメータ」などです。  
 
+例：  
 {  
   "features": [  
       "age",  
@@ -41,7 +42,7 @@ jsonファイルで、諸設定を記載しています。
 dataフォルダは、input/outputに分けています。
 
 ## input
-inputフォルダには、元データのcsvファイルや、feather形式に変換したファイルなどを配置しています。
+inputフォルダには、元データのcsvファイルや、クレンジング後のcsvファイルを配置しています。
 
 ## output
 outputフォルダには、提出用のcsvファイルを出力します。ファイル名は「sub_(year-month-day-hour-min)_(score)」のように設定し、後述するログと照合できるようにしています。
@@ -51,6 +52,15 @@ featuresフォルダには、train/testから作成した各特徴量を保存�
 
 ## logs
 logsフォルダには、計算の実行ごとに下記の情報などを出力しています。ファイル名は「log_(year-month-day-hour-min).log」のように設定し、前述した通り提出用のcsvファイルと照合できるようにしています。
+
+## notebook
+notebookフォルダには、探索的データ分析などで利用したJupyter Notebookを配置しています。ここで試行錯誤した結果を、適切なフォルダ内のpythonファイルに取り込んでいきます。
+
+## scripts
+scriptsフォルダには、汎用的なpythonファイルを配置します。例えば convert_to_feather.py ファイルは、csvファイルをfeather形式のファイルに変換します。
+
+## utils
+utilsフォルダには、汎用的に使える関数を書いています。
 
 ## 利用した特徴量
 - trainのshape
