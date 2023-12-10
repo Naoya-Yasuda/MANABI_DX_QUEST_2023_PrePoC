@@ -1,6 +1,5 @@
 """
  このファイルは、前処理としてデータクレンジングを行うためのファイルです。
- TODO:
 """
 from itertools import islice
 import pandas as pd
@@ -61,7 +60,6 @@ if __name__ == '__main__':
     # output_file = 'data/input/fixed_point_history.csv'  # 出力ファイルのパス
     # fix_csv_file(input_file, output_file)
 
-
     # assets配下のcsvデータをそれぞれ読み込む
     userDf = pd.read_csv('data/input/user_info.csv')
     # Nが入っているため、nanに変換してから型を統一する→nanで処理できるモデルがあるため
@@ -88,8 +86,8 @@ if __name__ == '__main__':
         lambda x: np.nan if len(x) != 7 else x)
 
     # 'birth_day'が'1910-01-01'以前の行をフィルタリング 31行
-    filtered_by_birth_day = userDf[userDf['birth_day'] <= '1910-01-01']
-    # TODO: birth_dayをどうするか検討中
+    # filtered_by_birth_day = userDf[userDf['birth_day'] <= '1910-01-01']
+    # birth_dayで１００歳以上の人はいないと判断し、NaNに置換する処理
     userDf['birth_day'] = userDf['birth_day'].apply(
         lambda x: np.NaN if pd.to_datetime(x) < pd.to_datetime('1920-01-01') or pd.to_datetime(x) > pd.to_datetime('2022-01-01') else x)
 
