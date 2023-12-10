@@ -22,15 +22,14 @@ def process_chunk(df):
     df = df.drop(columns=['shop_url', 'free_text', 'rps_target_store', 'collect_item', 'record_id',
                           'other_shop_id', 'deactivated_flg', 'is_search_result_display'])
     print(df.columns)
-    
-
 
     # 行削除
-    df = df[df['item_id'] == 1]    # 古紙データに絞り込み
+    df[(df['item_id'] == 1) | (df['item_id'] == 'N')]  # 古紙データとポイント利用データを抽出
     df = df.dropna(subset=['super', 'user_id'])
     df = df[df['user_id'] != 'N']    # ユーザidがNの行を削除
 
     return df
+
 
 def create_cleansing_csv():
     chunk_size = 10e5  # 一度に読み込む行数
@@ -43,10 +42,6 @@ def create_cleansing_csv():
         df = process_chunk(chunk)
 
         # 処理済みのチャンクをリストに追加
-        #chunks.append(processed_chunk)
-        #chunks.append(chunk)
-        #df.to_csv('data/input/point_history_cleansing_'+str(count)+'.csv', index=False)    
-        #count += 1
         chunk_df = pd.concat([chunk_df, df], ignore_index=True)
 
     # 最終的なDataFrameをCSVファイルとして保存
@@ -54,7 +49,20 @@ def create_cleansing_csv():
 
 
 if __name__ == '__main__':
-    df =pd.read_csv('data/input/point_history_cleansing.csv')
+    # 表示する最大列数を設定（例: Noneは無制限を意味します）
+    pd.set_option('display.max_columns', 100)
+    # 表示する最大行数も設定できます（オプション）
+    pd.set_option('display.max_rows', 100)
+
+    # create_cleansing_csv()
+
+    df = pd.read_csv('data/input/point_history_cleansing.csv')
+    # print(df['status'].unique())
+    # tmpDf = df[df['item_id'] == 'N']
+    # print(tmpDf.head())  # TODO: user_idが69はテストユーザーっぽい。他にもあるか探して除外したい
+    # tmpDf = df[df['status'] == 3]
+    # print(tmpDf)
+
     df = df.replace('N', np.nan)
 
     df['use_date'] = pd.to_datetime(df['use_date'], errors='coerce')
@@ -62,23 +70,50 @@ if __name__ == '__main__':
     df['updated_at'] = pd.to_datetime(df['updated_at'], errors='coerce')
     df['created_at_1'] = pd.to_datetime(df['created_at_1'], errors='coerce')
     df['updated_at_1'] = pd.to_datetime(df['updated_at_1'], errors='coerce')
+    # time型に変換
+    df['store_opening_time'] = pd.to_datetime(
+        df['store_opening_time'], format='%H:%M:%S').dt.time
+    df['store_closing_time'] = pd.to_datetime(
+        df['store_closing_time'], format='%H:%M:%S').dt.time
+    df['rps_opening_time'] = pd.to_datetime(
+        df['rps_opening_time'], format='%H:%M:%S').dt.time
+    df['rps_closing_time'] = pd.to_datetime(
+        df['rps_closing_time'], format='%H:%M:%S').dt.time
 
     column_types = {
-            'user_id': int,  
-            'amount': np.float16,
-            'amount_kg': np.float16,
-            'point': np.float16,
-            'total_point': np.float16,
-            'total_amount': np.float16,
-            'coin': np.float16,
-            # 'id_1': int,
-            # 'series': int,
+        'user_id': int,
+        'amount': np.float16,
+        'amount_kg': np.float16,
+        'point': np.float16,
+        'total_point': np.float16,
+        'total_amount': np.float16,
+        'coin': np.float16,
+        'id_1': 'Int64',
+        'series': 'Int64',
+        # 'rank_id': 'Int64',
 
-
-        }
+    }
     df = df.astype(column_types)
-    # print(df.info())
-    print(df[df['total_amount'] < 0])
+
+    # print(df[df['use_date'] > pd.to_datetime('2023-12-06')])
+    # print(df[df['created_at'] > pd.to_datetime('2023-12-06')])
+    # print(df[df['updated_at'] > pd.to_datetime('2023-12-06')])
+    # print(df[df['created_at_1'] > pd.to_datetime('2023-12-06')])
+    # print(df[df['updated_at_1'] > pd.to_datetime('2023-12-06')])
+    # print(df['rank_id'].unique())
+    # print(df[df['rank_id'].isna()])
+    # TODO: rank_idが「nan」のものは削除？QAの返答待ち
+    # print(df[df['status'] == 7]['rank_id'].unique())
+
+    # 列名を直感的に変更
+    df = df.rename(columns={'id_1': '支店ID'})
+    df = df.rename(columns={'item_id': 'リサイクル分類ID'})
 
     # 不正な行削除
-    # df = df[df['amount'] >= 0]    # amount(持ち込み量)が負の値を削除
+    df = df[df['amount'] >= 0]    # amount(持ち込み量)が負の値を削除
+    df = df[df['amount_kg'] >= 0]    # amount_kg(持ち込み量kg)が負の値を削除
+    df = df[df['point'] >= 0]    # point(RPSのポイント)が負の値を削除 TODO: QAの返答待ち
+    df = df[df['total_point'] >= 0]    # total_point(RPSのポイント)が負の値を削除
+    # 列削除
+    df = df.drop(columns=['unit_id', 'prefectures', 'municipality'])
+    # print(df)
