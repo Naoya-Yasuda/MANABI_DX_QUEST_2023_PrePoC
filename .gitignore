@@ -4,3 +4,6 @@ data/*
 # ただし、.gitkeepファイルは除外
 !data/input/.gitkeep
 !data/output/.gitkeep
+
+# Macの隠しフォルダを除外
+.DS_Store
