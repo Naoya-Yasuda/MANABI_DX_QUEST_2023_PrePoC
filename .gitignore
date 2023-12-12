@@ -1,9 +1,12 @@
 # dataディレクトリ下のすべてのファイルを無視
 data/*
 
-# ただし、.gitkeepファイルは除外
+# ただし、.gitkeepファイルはGithubにアップロード
 !data/input/.gitkeep
 !data/output/.gitkeep
 
 # Macの隠しフォルダを除外
 .DS_Store
+
+# バックアップ用ファイルを無視
+~*
