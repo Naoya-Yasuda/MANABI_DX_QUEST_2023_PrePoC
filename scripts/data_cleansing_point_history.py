@@ -122,16 +122,17 @@ if __name__ == '__main__':
     df = df.rename(columns={'item_id': 'リサイクル分類ID'})
 
     # 不正な行削除
-    df = df[(df['amount'] >= 0) | df['amount'].isna()]    # amount(持ち込み量)が負の値を削除
-    df = df[(df['amount_kg'] >= 0) | df['amount_kg'].isna()]    # amount_kg(持ち込み量kg)が負の値を削除
-    df = df[(df['point'] >= 0) | df['point'].isna()]    # point(RPSのポイント)が負の値を削除 TODO: QAの返答待ち
-    df = df[(df['total_point'] >= 0) | df['total_point'].isna()]    # total_point(RPSのポイント)が負の値を削除
+    # amount(持ち込み量)が負の値を削除
+    df = df[(df['amount'] >= 0) | df['amount'].isna()]
+    # amount_kg(持ち込み量kg)が負の値を削除
+    df = df[(df['amount_kg'] >= 0) | df['amount_kg'].isna()]
+    # point(RPSのポイント)が負の値を削除
+    df = df[(df['point'] >= 0) | df['point'].isna()]
+    # total_point(RPSのポイント)が負の値を削除
+    df = df[(df['total_point'] >= 0) | df['total_point'].isna()]
     # 列削除
-    df = df.drop(columns=['unit_id', 'prefectures', 'municipality', 'series','address'])
+    df = df.drop(columns=['unit_id', 'prefectures',
+                 'municipality', 'series', 'address'])
 
-
-
-    
     # csv書き出し
     df.to_csv('data/input/point_history_cleansing_2.csv', index=True)
-
