@@ -10,3 +10,4 @@ data/*
 
 # バックアップ用ファイルを無視
 ~*
+*-checkpoint.ipynb
