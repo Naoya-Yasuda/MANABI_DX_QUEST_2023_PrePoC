@@ -67,7 +67,10 @@ if __name__ == '__main__':
 
     # check_integer(userDf, ['total_recycle_amount', 'recycle_amount_per_year'])
 
+    #  誕生日が直近すぎるデータは削除する
     userDf['birth_day'] = pd.to_datetime(userDf['birth_day'], errors='coerce')
+    userDf = userDf[userDf['birth_day'] < pd.to_datetime('2017-01-01')]
+
     column_types = {
         'club_coin': np.float16,  # 普通のfloatは64ビットなので4倍くらい軽くなる
         'recycle_point': np.float16,
