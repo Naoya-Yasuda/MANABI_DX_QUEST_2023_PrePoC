@@ -1,0 +1,2 @@
+﻿# ノートブックの実行結果を管理対象から外す
+*.ipynb filter=nbstripout
