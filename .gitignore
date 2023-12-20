@@ -11,3 +11,6 @@ data/*
 # バックアップ用ファイルを無視
 ~*
 *-checkpoint.ipynb
+
+# .envファイルを無視
+.env
