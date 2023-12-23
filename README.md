@@ -10,7 +10,8 @@ notebookの実行結果は実行する度に差分として出てしまうので
 1. `conda activate patchworks` 実施していなければする
 2. `pip install nbstripout` nbstripoutをインストール
 3. `nbstripout --install` nbstripout の Git への設定
-4. `git rm --cached -r .` `git reset --hard` キャッシュ削除
+4. `git rm --cached -r .` キャッシュ削除
+5. `git reset --hard` キャッシュ削除
 
 
 # フォルダ構成
