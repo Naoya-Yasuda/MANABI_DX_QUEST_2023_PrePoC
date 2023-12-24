@@ -50,9 +50,15 @@ df_point_history_weather = pd.merge(df_point_history, df_weather, left_on=['muni
 # 列削除
 df_point_history_weather = df_point_history_weather.drop(columns=['use_date_2'])
 df_point_history_weather = df_point_history_weather.drop(columns=['県','市'])
+df_point_history_weather = df_point_history_weather[(df_point_history_weather["天気"] == "晴") | (df_point_history_weather["天気"] == "曇") | (df_point_history_weather["天気"] == "雨") | (df_point_history_weather["天気"] == "雪")]
+df_point_history_weather = df_point_history_weather[pd.notna(df_point_history_weather["amount_kg"])]
 
 print("shape",df_point_history_weather.shape)
 print(df_point_history_weather["天気"].value_counts())
 print("天気nan例",df_point_history_weather[(df_point_history_weather["天気"] != "晴") & (df_point_history_weather["天気"] != "曇") & (df_point_history_weather["天気"] != "雨") & (df_point_history_weather["天気"] != "雪")][:10])
 
 df_point_history_weather.to_csv('data/input/point_history_rps_weather.csv', index=False, encoding="utf-8")
+
+
+
+

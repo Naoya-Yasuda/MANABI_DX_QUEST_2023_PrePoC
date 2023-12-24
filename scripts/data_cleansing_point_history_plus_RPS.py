@@ -26,12 +26,13 @@ def process_chunk_dask(df):
     #df = df.astype(dtype_changes)
 
     # 行削除
-    df = df[df['item_id'] == 1]  # item_idが1の行のみ保持
-    df = df.dropna(subset=['super'])  # superにNaNがある行を削除
-    df = df.dropna(subset=['amount'])  # superにNaNがある行を削除
-    df = df.dropna(subset=['amount_kg'])  # superにNaNがある行を削除
-    df = df.dropna(subset=['point'])  # superにNaNがある行を削除
-    df = df.dropna(subset=['total_point'])  # superにNaNがある行を削除
+    df = df[df['item_id'] == 1] 
+    df = df.dropna(subset=['super'])  
+    df = df.dropna(subset=['amount'])  
+    df = df.dropna(subset=['amount_kg'])  
+    df = df.dropna(subset=['point'])  
+    df = df.dropna(subset=['total_point'])  
+    df = df.dropna(subset=['prefectures'])  
 
     # 列名を直感的に変更
     df = df.rename(columns={'id_1': '支店ID'})
@@ -111,12 +112,13 @@ def process_chunk(df):
 
 
     # 行削除
-    df = df[df['item_id'] == 1]  # item_idが1の行のみ保持
-    df = df.dropna(subset=['super'])  # superにNaNがある行を削除
-    df = df.dropna(subset=['amount'])  # superにNaNがある行を削除
-    df = df.dropna(subset=['amount_kg'])  # superにNaNがある行を削除
-    df = df.dropna(subset=['point'])  # superにNaNがある行を削除
-    df = df.dropna(subset=['total_point'])  # superにNaNがある行を削除
+    df = df[df['item_id'] == 1] 
+    df = df.dropna(subset=['super'])  
+    df = df.dropna(subset=['amount'])  
+    df = df.dropna(subset=['amount_kg'])  
+    df = df.dropna(subset=['point'])  
+    df = df.dropna(subset=['total_point'])  
+    df = df.dropna(subset=['prefectures'])  
 
     # 列名を直感的に変更
     df = df.rename(columns={'id_1': '支店ID'})
@@ -197,5 +199,5 @@ def merge_csv():
 #process_and_save_csv_dask('data/input/point_history.csv', 'data/input/point_history_rps.csv')
 
 # 方法2 Pandasを使用
-#create_cleansing_csv()
-merge_csv() 
+create_cleansing_csv()
+#merge_csv() 
