@@ -1,8 +1,6 @@
-import requests
-import os
+
 from datetime import datetime, timedelta
 import pandas as pd
-import json
 import numpy as np
 
 # カスタム関数を定義
