@@ -10,7 +10,10 @@ pd.set_option('display.float_format', '{:.3f}'.format)
 #plt.rcParams['font.family'] = 'Meiryo'
 
 # Mac Matplotlibのデフォルトフォントをヒラギノ角ゴシックに設定
-plt.rcParams['font.family'] = 'Hiragino Sans'
+#plt.rcParams['font.family'] = 'Hiragino Sans'
+
+# クラウド環境用
+plt.rcParams['font.family'] = 'Noto Sans CJK JP'
 
 def replace_nan(df):
     df = df.replace('N', np.nan)
