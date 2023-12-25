@@ -296,6 +296,7 @@ def concat_csv():
     # 列削除
     df = df.drop(columns=['shop_url', 'free_text', 'rps_target_store', 'collect_item', 'record_id',
                           'other_shop_id', 'deactivated_flg', 'is_search_result_display'])
+    df = df.replace('N', np.nan)
     df['use_date'] = pd.to_datetime(df['use_date'], errors='coerce')
     df['created_at'] = pd.to_datetime(df['created_at'], errors='coerce')
     df['updated_at'] = pd.to_datetime(df['updated_at'], errors='coerce')
@@ -328,7 +329,7 @@ def concat_csv():
     # 列名を直感的に変更
     df = df.rename(columns={'id_1': '支店ID'})
     df = df.rename(columns={'item_id': 'リサイクル分類ID'})
-    
+
     df.to_csv('data/input/point_history.csv', index=False, encoding="utf-8")
 
     
