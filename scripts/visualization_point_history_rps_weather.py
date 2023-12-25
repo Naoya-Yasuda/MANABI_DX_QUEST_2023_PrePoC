@@ -7,7 +7,10 @@ import matplotlib.dates as mdates
 pd.set_option('display.float_format', '{:.3f}'.format)
 
 # Windows MatplotlibのデフォルトフォントをMeiryoに設定
-plt.rcParams['font.family'] = 'Meiryo'
+#plt.rcParams['font.family'] = 'Meiryo'
+
+# Mac Matplotlibのデフォルトフォントをヒラギノ角ゴシックに設定
+plt.rcParams['font.family'] = 'Hiragino Sans'
 
 def replace_nan(df):
     df = df.replace('N', np.nan)
@@ -327,5 +330,6 @@ if __name__ == '__main__':
     df = pd.read_csv('data/input/point_history.csv', encoding="utf-8")
     df = replace_nan(df)
     df = set_dtype(df)
+    df = df[(df['item_id'] == 1) | (df['item_id'] == np.nan)]  # 古紙データとポイント利用データを抽出
     show_total_recycle_amount_per_date_noncleansing(df)
     aggregate_shop_date_noncleansing(df)
