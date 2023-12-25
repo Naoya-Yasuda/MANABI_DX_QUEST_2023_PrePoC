@@ -325,7 +325,10 @@ def concat_csv():
 
     df.to_csv('data/input/point_history.csv', index=False, encoding="utf-8")
 
-    
+
+def extract_one_shop(df, super, shop_name_1):
+    df2 = df[(df['super'] == super) & (df['shop_name_1'] == shop_name_1)].sort_values('use_date')
+    df2.to_csv(f'data/input/point_history_{super}_{shop_name_1}.csv', index=False, encoding="utf-8")
 
 
 if __name__ == '__main__':
@@ -333,7 +336,9 @@ if __name__ == '__main__':
     df = pd.read_csv('data/input/point_history.csv', encoding="utf-8")
     df = replace_nan(df)
     df = set_dtype(df)
-    print(df['リサイクル分類ID'].unique())
-    df = df[(df['リサイクル分類ID'] == "1") | (df['リサイクル分類ID'] == "1.0") | (df['リサイクル分類ID'] == np.nan)]  # 古紙データとポイント利用データを抽出
-    show_total_recycle_amount_per_date_noncleansing(df)
-    aggregate_shop_date_noncleansing(df)
+    #print(df['リサイクル分類ID'].unique())
+    #df = df[(df['リサイクル分類ID'] == "1") | (df['リサイクル分類ID'] == "1.0") | (df['リサイクル分類ID'] == np.nan)]  # 古紙データとポイント利用データを抽出
+    #show_total_recycle_amount_per_date_noncleansing(df)
+    #aggregate_shop_date_noncleansing(df)
+
+    extract_one_shop(df, 'ヨークベニマル', '明石台店')
