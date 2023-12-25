@@ -312,20 +312,7 @@ def concat_csv():
     df['rps_closing_time'] = pd.to_datetime(
         df['rps_closing_time'], format='%H:%M:%S').dt.time
 
-    column_types = {
-        'user_id': int,
-        'amount': np.float16,
-        'amount_kg': np.float16,
-        'point': np.float16,
-        'total_point': np.float16,
-        'total_amount': np.float16,
-        'coin': np.float16,
-        'id_1': 'Int64',
-        'series': 'Int64',
-        # 'rank_id': 'Int64',
-
-    }
-    df = df.astype(column_types)
+    df = set_dtype(df)
     # 列名を直感的に変更
     df = df.rename(columns={'id_1': '支店ID'})
     df = df.rename(columns={'item_id': 'リサイクル分類ID'})
