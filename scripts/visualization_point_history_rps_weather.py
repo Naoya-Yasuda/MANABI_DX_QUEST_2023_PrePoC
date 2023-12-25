@@ -330,6 +330,6 @@ if __name__ == '__main__':
     df = pd.read_csv('data/input/point_history.csv', encoding="utf-8")
     df = replace_nan(df)
     df = set_dtype(df)
-    df = df[(df['item_id'] == 1) | (df['item_id'] == np.nan)]  # 古紙データとポイント利用データを抽出
+    df = df[(df['リサイクル分類ID'] == 1) | (df['リサイクル分類ID'] == np.nan)]  # 古紙データとポイント利用データを抽出
     show_total_recycle_amount_per_date_noncleansing(df)
     aggregate_shop_date_noncleansing(df)
