@@ -290,9 +290,18 @@ def aggregate_shop_date_noncleansing(df):
     # 結果を保存
     aggregated_df.to_csv('data/input/point_history_per_shop_date_noncleansing.csv', index=False, encoding="utf-8")
 
+def concat_csv():
+    # data/input/point_history_1.csv ~ data/input/point_history_15.csv を結合。data/input/point_history.csvに保存
+    df = pd.concat([pd.read_csv(f'data/input/point_history_{i}.csv', encoding="utf-8") for i in range(1, 16)])
+    df.to_csv('data/input/point_history.csv', index=False, encoding="utf-8")
+
+    
+
+
 if __name__ == '__main__':
-    df = pd.read_csv('data/input/point_history.csv', encoding="utf-8")
-    df = replace_nan(df)
-    df = set_dtype(df)
-    show_total_recycle_amount_per_date_noncleansing(df)
-    aggregate_shop_date_noncleansing(df)
+    concat_csv()
+    #df = pd.read_csv('data/input/point_history.csv', encoding="utf-8")
+    #df = replace_nan(df)
+    #df = set_dtype(df)
+    #show_total_recycle_amount_per_date_noncleansing(df)
+    #aggregate_shop_date_noncleansing(df)
