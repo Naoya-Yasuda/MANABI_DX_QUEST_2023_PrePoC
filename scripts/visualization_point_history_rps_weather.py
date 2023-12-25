@@ -293,6 +293,42 @@ def aggregate_shop_date_noncleansing(df):
 def concat_csv():
     # data/input/point_history_1.csv ~ data/input/point_history_15.csv を結合。data/input/point_history.csvに保存
     df = pd.concat([pd.read_csv(f'data/input/point_history_{i}.csv', encoding="utf-8") for i in range(1, 16)])
+    # 列削除
+    df = df.drop(columns=['shop_url', 'free_text', 'rps_target_store', 'collect_item', 'record_id',
+                          'other_shop_id', 'deactivated_flg', 'is_search_result_display'])
+    df['use_date'] = pd.to_datetime(df['use_date'], errors='coerce')
+    df['created_at'] = pd.to_datetime(df['created_at'], errors='coerce')
+    df['updated_at'] = pd.to_datetime(df['updated_at'], errors='coerce')
+    df['created_at_1'] = pd.to_datetime(df['created_at_1'], errors='coerce')
+    df['updated_at_1'] = pd.to_datetime(df['updated_at_1'], errors='coerce')
+    # time型に変換
+    df['store_opening_time'] = pd.to_datetime(
+        df['store_opening_time'], format='%H:%M:%S').dt.time
+    df['store_closing_time'] = pd.to_datetime(
+        df['store_closing_time'], format='%H:%M:%S').dt.time
+    df['rps_opening_time'] = pd.to_datetime(
+        df['rps_opening_time'], format='%H:%M:%S').dt.time
+    df['rps_closing_time'] = pd.to_datetime(
+        df['rps_closing_time'], format='%H:%M:%S').dt.time
+
+    column_types = {
+        'user_id': int,
+        'amount': np.float16,
+        'amount_kg': np.float16,
+        'point': np.float16,
+        'total_point': np.float16,
+        'total_amount': np.float16,
+        'coin': np.float16,
+        'id_1': 'Int64',
+        'series': 'Int64',
+        # 'rank_id': 'Int64',
+
+    }
+    df = df.astype(column_types)
+    # 列名を直感的に変更
+    df = df.rename(columns={'id_1': '支店ID'})
+    df = df.rename(columns={'item_id': 'リサイクル分類ID'})
+    
     df.to_csv('data/input/point_history.csv', index=False, encoding="utf-8")
 
     
