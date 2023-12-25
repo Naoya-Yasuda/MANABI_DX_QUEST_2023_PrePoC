@@ -323,9 +323,9 @@ def concat_csv():
 
 
 if __name__ == '__main__':
-    concat_csv()
-    #df = pd.read_csv('data/input/point_history.csv', encoding="utf-8")
-    #df = replace_nan(df)
-    #df = set_dtype(df)
-    #show_total_recycle_amount_per_date_noncleansing(df)
-    #aggregate_shop_date_noncleansing(df)
+    #concat_csv()
+    df = pd.read_csv('data/input/point_history.csv', encoding="utf-8")
+    df = replace_nan(df)
+    df = set_dtype(df)
+    show_total_recycle_amount_per_date_noncleansing(df)
+    aggregate_shop_date_noncleansing(df)
