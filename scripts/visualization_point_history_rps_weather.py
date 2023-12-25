@@ -167,6 +167,10 @@ def replace_nan(df):
     return df
 
 def set_dtype(df):
+    # 列名を直感的に変更
+    df = df.rename(columns={'id_1': '支店ID'})
+    df = df.rename(columns={'item_id': 'リサイクル分類ID'})
+
     column_types = {
         'id':np.float32,
         'user_id':np.float64,
@@ -174,6 +178,7 @@ def set_dtype(df):
         'shop_id' : str,
         'shop_name' : str,
         'card_id' : str,
+        'リサイクル分類ID' : str,
         'amount' : np.float32,
         'amount_kg' : np.float32,
         'point' : np.float32,
@@ -184,7 +189,7 @@ def set_dtype(df):
         'use_date': 'datetime64[ns]',
         'created_at': 'datetime64[ns]',
         'updated_at': 'datetime64[ns]',
-        #'支店ID' : np.float32,
+        '支店ID' : np.float32,
         'super' : str,
         'prefectures' : str,
         'municipality' : str,
@@ -209,7 +214,7 @@ def set_dtype(df):
     df = df.astype(column_types)
     return df
 
-def total_recycle_amount_per_date(df):
+def show_total_recycle_amount_per_date_noncleansing(df):
     # Nanに置き換え
     df = replace_nan(df)
 
@@ -241,12 +246,53 @@ def total_recycle_amount_per_date(df):
 
     ax.set_yscale('log')
     ax.legend()
-    plt.savefig('data/input/total_recycle_amount_per_date.png')
+    plt.savefig('data/input/total_recycle_amount_per_date_noncleansing.png')
     plt.show()
+
+def aggregate_shop_date_noncleansing(df):
+    # Nanに置き換え
+    df = replace_nan(df)
+
+    # 型変換
+    df = set_dtype(df)
+    
+    # use_date列をparse_date関数で日付型に変換し、時間は切り捨てし、[use_date_2]列に格納
+    df['年月日'] = pd.to_datetime(df['use_date']).dt.floor('d')
+
+    # shop_idと年月日ごとにグループ化し、合計値と代表値を計算
+    aggregated_df = df.groupby(['shop_id', '年月日']).agg({
+        'amount': 'sum',
+        'amount_kg': 'sum',
+        'point': 'sum',
+        'total_point': 'sum',
+        'total_amount': 'sum',
+        'coin': 'sum',
+        'series_id': 'first',
+        'shop_name': 'first',
+        'リサイクル分類ID': 'first',
+        '支店ID': 'first',
+        'super': 'first',
+        'prefectures': 'first',
+        'municipality': 'first',
+        'shop_name_1': 'first',
+        'shop_id_1': 'first',
+        'store_opening_time': 'first',
+        'store_closing_time': 'first',
+        'rps_opening_time': 'first',
+        'rps_closing_time': 'first',
+        'store_latitude': 'first',
+        'store_longitude': 'first',
+    }).reset_index()
+
+    # shop_idと年月日でソート
+    aggregated_df = aggregated_df.sort_values(by=['shop_id', '年月日'])
+
+    # 結果を保存
+    aggregated_df.to_csv('data/input/point_history_per_shop_date_noncleansing.csv', index=False, encoding="utf-8")
 
 if __name__ == '__main__':
     df = pd.read_csv('data/input/point_history.csv', encoding="utf-8")
     df = replace_nan(df)
     df = set_dtype(df)
-    total_recycle_amount_per_date(df)
-    #aggregate_shop_date(df)
+    show_total_recycle_amount_per_date_noncleansing(df)
+    aggregate_shop_date_noncleansing(df)
