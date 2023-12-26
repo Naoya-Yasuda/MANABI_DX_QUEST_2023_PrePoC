@@ -341,4 +341,19 @@ if __name__ == '__main__':
     #show_total_recycle_amount_per_date_noncleansing(df)
     #aggregate_shop_date_noncleansing(df)
 
-    extract_one_shop(df, 'ヨークベニマル', '明石台店')
+    extract_one_shop(df, 'ヨークベニマル', '佐野田島町店')
+    extract_one_shop(df, 'ヨークベニマル', '南中山店')
+
+    extract_one_shop(df, 'みやぎ生協', '加賀野店')
+    # ヨークベニマル      西那須野店 
+    extract_one_shop(df, 'ヨークベニマル', '西那須野店')
+    # みやぎ生協        石巻大橋店
+    extract_one_shop(df, 'みやぎ生協', '石巻大橋店')
+    # ヨークベニマル      若松原店
+    extract_one_shop(df, 'ヨークベニマル', '若松原店')
+    # ビフレ          東通店
+    extract_one_shop(df, 'ビフレ', '東通店')
+
+
+
+    
