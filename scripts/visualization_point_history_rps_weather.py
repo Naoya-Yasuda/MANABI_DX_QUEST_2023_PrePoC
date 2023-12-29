@@ -193,7 +193,7 @@ if __name__ == '__main__':
     #extract_one_shop(df, 'ヨークベニマル', '西那須野店')
     #extract_one_shop(df, 'ヨークベニマル', '若松原店')
     #extract_one_shop(df, 'ビフレ', '東通店')
-    extract_one_shop(df, 'みやぎ生協', '加賀野店')
+    #extract_one_shop(df, 'みやぎ生協', '加賀野店')
     extract_one_shop(df, 'みやぎ生協', '石巻大橋店')
 
     
