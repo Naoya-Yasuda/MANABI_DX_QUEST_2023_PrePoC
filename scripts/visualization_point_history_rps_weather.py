@@ -179,7 +179,7 @@ def extract_one_shop(df, super, shop_name_1):
 
 if __name__ == '__main__':
     #concat_csv()
-    df = pd.read_csv('data/input/point_history.csv', encoding="utf-8")
+    df = pd.read_csv('data/input/point_history_weather.csv', encoding="utf-8")
     df = replace_nan(df)
     df = set_dtype(df)
     df['super'] = df['super'].str.replace(r'\s+', '', regex=True)
