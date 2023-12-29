@@ -64,6 +64,7 @@ def set_dtype(df):
         '合計全天日射量(MJ/㎡)': np.float32,
     }
     df = df.astype(column_types)
+    df['super'] = df['super'].str.replace(r'\s+', '', regex=True)   # 空白文字などを削除
     return df
 
 def aggregate_shop_date(df):
@@ -220,7 +221,7 @@ def set_dtype(df):
     df = df.astype(column_types)
     return df
 
-def show_total_recycle_amount_per_date_noncleansing(df):
+def show_total_recycle_amount_per_date(df):
     # Nanに置き換え
     df = replace_nan(df)
 
@@ -252,10 +253,10 @@ def show_total_recycle_amount_per_date_noncleansing(df):
 
     ax.set_yscale('log')
     ax.legend()
-    plt.savefig('data/input/total_recycle_amount_per_date_noncleansing.png')
+    plt.savefig('data/input/total_recycle_amount_per_date.png')
     plt.show()
 
-def aggregate_shop_date_noncleansing(df):
+def aggregate_shop_date(df):
     # Nanに置き換え
     df = replace_nan(df)
 
@@ -341,19 +342,12 @@ if __name__ == '__main__':
     #show_total_recycle_amount_per_date_noncleansing(df)
     #aggregate_shop_date_noncleansing(df)
 
-    extract_one_shop(df, 'ヨークベニマル', '佐野田島町店')
-    extract_one_shop(df, 'ヨークベニマル', '南中山店')
-
+    #extract_one_shop(df, 'ヨークベニマル', '佐野田島町店')
+    #extract_one_shop(df, 'ヨークベニマル', '南中山店')
+    #extract_one_shop(df, 'ヨークベニマル', '西那須野店')
+    #extract_one_shop(df, 'ヨークベニマル', '若松原店')
+    #extract_one_shop(df, 'ビフレ', '東通店')
     extract_one_shop(df, 'みやぎ生協', '加賀野店')
-    # ヨークベニマル      西那須野店 
-    extract_one_shop(df, 'ヨークベニマル', '西那須野店')
-    # みやぎ生協        石巻大橋店
     extract_one_shop(df, 'みやぎ生協', '石巻大橋店')
-    # ヨークベニマル      若松原店
-    extract_one_shop(df, 'ヨークベニマル', '若松原店')
-    # ビフレ          東通店
-    extract_one_shop(df, 'ビフレ', '東通店')
-
-
 
     
