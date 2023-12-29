@@ -3,7 +3,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
-# 自作モジュール
+import sys, os
+
+# 親ディレクトリをsys.pathに追加
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.point_history_utils import replace_nan, set_dtype, parse_date
 
 # 浮動小数点数を小数点以下3桁で表示するように設定

@@ -5,7 +5,7 @@ import numpy as np
 import sys, os
 
 # 親ディレクトリをsys.pathに追加
-sys.path.append(os.path.dirname(os.getcwd()))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.point_history_utils import replace_nan, set_dtype, parse_date
 
 
