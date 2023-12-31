@@ -2,20 +2,6 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-def replace_nan(df):
-    """
-    Replace 'N', 'NaN', 'nan', 'foo', '///' to np.nan
-    args:
-        df: pandas.DataFrame
-    return:
-        df: pandas.DataFrame    
-    """
-    df = df.replace('N', np.nan)
-    df = df.replace('NaN', np.nan)
-    df = df.replace('nan', np.nan)
-    df = df.replace('foo', np.nan)
-    df = df.replace('///', np.nan)
-    return df
 
 def parse_date(date):
     """
@@ -67,19 +53,37 @@ def set_dtype(df):
         'shop_id_1' :    str,
         'store_latitude' : np.double,
         'store_longitude' : np.double,
-        '年月日' : 'datetime64[ns]',
-        '天気': str,
-        '平均気温(℃)': np.float32,
-        '最高気温(℃)': np.float32,
-        '最低気温(℃)': np.float32,
-        '降水量の合計(mm)': np.float32,
-        '平均風速(m/s)': np.float32,
-        '平均湿度(％)': np.float32,
-        '平均現地気圧(hPa)': np.float32,
-        '平均雲量(10分比)': np.float32,
-        '降雪量合計(cm)': np.float32,
-        '日照時間(時間)': np.float32,
-        '合計全天日射量(MJ/㎡)': np.float32,
+         '年月日' : 'datetime64[ns]',
+         '天気': str,
+         '平均気温(℃)': np.float32,
+         '最高気温(℃)': np.float32,
+         '最低気温(℃)': np.float32,
+         '降水量の合計(mm)': np.float32,
+         '平均風速(m/s)': np.float32,
+         '平均湿度(％)': np.float32,
+         '平均現地気圧(hPa)': np.float32,
+         '平均雲量(10分比)': np.float32,
+         '降雪量合計(cm)': np.float32,
+         '日照時間(時間)': np.float32,
+         '合計全天日射量(MJ/㎡)': np.float32,
     }
     df = df.astype(column_types)
+    return df
+
+
+
+def replace_nan(df):
+    """
+    set_dtypeの後に実行してください
+    Replace 'N', 'NaN', 'nan', 'foo', '///' to np.nan
+    args:
+        df: pandas.DataFrame
+    return:
+        df: pandas.DataFrame    
+    """
+    df = df.replace('N', np.nan)
+    df = df.replace('NaN', np.nan)
+    df = df.replace('nan', np.nan)
+    df = df.replace('foo', np.nan)
+    df = df.replace('///', np.nan)
     return df

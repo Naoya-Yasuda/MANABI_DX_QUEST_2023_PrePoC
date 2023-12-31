@@ -9,8 +9,8 @@ import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.point_history_utils import replace_nan, set_dtype, parse_date
 
-# 浮動小数点数を小数点以下3桁で表示するように設定
-pd.set_option('display.float_format', '{:.3f}'.format)
+# 浮動小数点数を小数点以下2桁で表示するように設定
+pd.set_option('display.float_format', '{:.2f}'.format)
 
 # Windows MatplotlibのデフォルトフォントをMeiryoに設定
 #plt.rcParams['font.family'] = 'Meiryo'
