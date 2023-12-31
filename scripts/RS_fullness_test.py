@@ -9,6 +9,7 @@ import sys
 from datetime import datetime, timedelta, time
 from scipy.optimize import curve_fit
 from scipy import stats
+import datetime
 
 # 親ディレクトリをsys.pathに追加
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -128,6 +129,7 @@ def chi_squared_statistic(func, params, bin_centers, counts):
     return p_value
 
 if __name__ == '__main__':
+    print(datetime.datetime.now())
     df = pd.read_csv('data/input/point_history_weather.csv', encoding="utf-8")    
 
     # 前処理
@@ -172,3 +174,5 @@ if __name__ == '__main__':
         df_tmp.to_csv('data/input/shop_data/point_history_' + super_name + '_' + shop_name + '.csv', encoding="utf-8")
 
     df_shop_list.to_csv('data/input/shop_list.csv', encoding="utf-8")
+
+    print(datetime.datetime.now())
