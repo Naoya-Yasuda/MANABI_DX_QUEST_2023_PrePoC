@@ -18,14 +18,6 @@ from utils.point_history_utils import replace_nan, set_dtype, parse_date
 # 浮動小数点数を小数点以下2桁で表示するように設定
 pd.set_option('display.float_format', '{:.2f}'.format)
 
-# べき乗則関数を定義
-def power_law(x, a, b):
-    return a * np.power(x, b)
-
-# 指数関数を定義
-def exp_func(x, a, b):
-    return a*np.exp(-b*x)
-
 def calc_recycle_period(df, super_name, shop_name):
     """
     リサイクルステーションの利用間隔を計算する関数
@@ -79,14 +71,14 @@ def plot_recycle_period(interval, super_name, shop_name, ax, func):
     # 重み付きフィットを実行
     try:
         initial_guess = [11.95740079,  1.03682929]
-        params, params_covariance = curve_fit(func, bin_centers[mask], counts[mask], sigma=weights,  maxfev=1000, p0=initial_guess)
+        params, params_covariance = curve_fit(func, bin_centers[mask], counts[mask], sigma=weights,  maxfev=3000, p0=initial_guess)
     except RuntimeError as err:
         print("Optimal parameters not found. Using the last tried parameters.")
         params = [11.95740079,  1.03682929]    # 仮の値を設定
 
     # フィット結果をプロット
     ax.bar(bin_centers, counts, width=np.diff(bin_edges), label='Data')
-    ax.plot(bin_centers, func(bin_centers, *params)+0.1, label='Fit: a=%.2f, b=%.2f' % tuple(params), color='red')
+    ax.plot(bin_centers, func(bin_centers, *params), label='Fit: a=%.2f, b=%.2f' % tuple(params), color='red')
     ax.set_xlabel( "Interval of Use for \n Recycling Station [h]" )
     ax.set_ylabel('Frequency')
     ax.set_xscale('log')
@@ -100,7 +92,7 @@ def power_law(x, a, b):
     """
     return : a * np.power(x, b)
     """
-    return a * np.power(x, b)
+    return a * np.power(x, b) +10e-4
 
 # 指数関数を定義
 def exp_func(x, a, b):
@@ -108,6 +100,7 @@ def exp_func(x, a, b):
     return : a * np.exp(-b*x)
     """
     return a*np.exp(-b*x)
+    #return a*np.exp(-b*x)+10e-4
 
 def chi_squared_statistic(func, params, bin_centers, counts):
     """
@@ -125,10 +118,10 @@ def chi_squared_statistic(func, params, bin_centers, counts):
     #expected = a * np.power(bin_centers, b) * (bin_centers[1] - bin_centers[0])  # 各ビンでの期待頻度
 
     # log変換
-    counts =   np.log(counts + 0.01)
-    expected = np.log(expected+ 0.01)
+    #counts =   np.log(counts + 10-5)
+    #expected = np.log(expected+ 10-5)
 
-    index = 2   # 利用間隔が短いものは重要でないため、解析対象から省く
+    index = 1  # 利用間隔が短いものは重要でないため、解析対象から省く
     
     # カイ二乗適合度検定
     n = len(counts[index:]) # 自由度
@@ -150,7 +143,12 @@ def KS_statistic(func, params, bin_centers, counts):
     a, b = params[:2]
     expected = func(bin_centers, a, b)
 
-    index = 2   # 利用間隔が短いものは重要でないため、解析対象から省く    
+    index = 2   # 利用間隔が短いものは重要でないため、解析対象から省く 
+    
+    # log変換
+    counts =   np.log(counts + 0.01)
+    expected = np.log(expected+ 0.01)
+       
     ks_statistic, p_value = stats.ks_2samp(counts[index:]/ np.sum(counts[index:]), expected[index:] / sum(expected[index:]))    #　KS検定
 
     return p_value

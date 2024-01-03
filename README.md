@@ -75,6 +75,7 @@ RS_filling_rateフォルダでは、充填率予測に向けたコードを配�
 以下の順で実行してください。
 1. weather_data_fetcher.py
 2. RS_fillingrate_test.py
+3. RS_filling_time_detecter.py
 
 
 ## 利用した特徴量
