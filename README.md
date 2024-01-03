@@ -70,6 +70,13 @@ scriptsフォルダには、汎用的なpythonファイルを配置します。�
 ## utils
 utilsフォルダには、汎用的に使える関数を書いています。
 
+## RS_filling_rate
+RS_filling_rateフォルダでは、充填率予測に向けたコードを配置しています。 
+以下の順で実行してください。
+1. weather_data_fetcher.py
+2. RS_fillingrate_test.py
+
+
 ## 利用した特徴量
 - trainのshape
 - 学習器のパラメータ
