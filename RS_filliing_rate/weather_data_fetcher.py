@@ -9,7 +9,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.point_history_utils import replace_nan, set_dtype, parse_date
 
 
-df_point_history = pd.read_csv('data/input/point_history.csv', encoding="utf-8")  # point_history_2.csv（都道府県、市を含む）を読み込む
+df_point_history = pd.read_csv('data/input/point_history_cleanging.csv', encoding="utf-8")  # point_history（都道府県、市を含む）を読み込む
 df_weather = pd.read_csv('data/input/weather_data/weather.csv', encoding="utf-8")
 
 df_point_history = replace_nan(df_point_history)
