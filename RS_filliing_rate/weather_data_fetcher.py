@@ -2,26 +2,14 @@
 from datetime import datetime, timedelta
 import pandas as pd
 import numpy as np
+import sys, os
 
-# カスタム関数を定義
-def parse_date(date):
-    try:
-        return pd.to_datetime(date)
-    except ValueError:
-        try:
-            return pd.to_datetime(date, format='%Y年%m月%d日')
-        except ValueError:
-            return pd.to_datetime(date, format='%Y/%m/%d')
-        
-def replace_nan(df):
-    df = df.replace('N', np.nan)
-    df = df.replace('NaN', np.nan)
-    df = df.replace('nan', np.nan)
-    df = df.replace('foo', np.nan)
-    df = df.replace('///', np.nan)
-    return df
+# 親ディレクトリをsys.pathに追加
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.point_history_utils import replace_nan, set_dtype, parse_date
 
-df_point_history = pd.read_csv('data/input/point_history_rps.csv', encoding="utf-8")  # point_history_2.csv（都道府県、市を含む）を読み込む
+
+df_point_history = pd.read_csv('data/input/point_history_cleanging.csv', encoding="utf-8")  # point_history（都道府県、市を含む）を読み込む
 df_weather = pd.read_csv('data/input/weather_data/weather.csv', encoding="utf-8")
 
 df_point_history = replace_nan(df_point_history)
@@ -57,7 +45,7 @@ print("shape",df_point_history_weather.shape)
 print(df_point_history_weather["天気"].value_counts())
 print("天気nan例",df_point_history_weather[(df_point_history_weather["天気"] != "晴") & (df_point_history_weather["天気"] != "曇") & (df_point_history_weather["天気"] != "雨") & (df_point_history_weather["天気"] != "雪")][:10])
 
-df_point_history_weather.to_csv('data/input/point_history_rps_weather.csv', index=False, encoding="utf-8")
+df_point_history_weather.to_csv('data/input/point_history_weather.csv', index=False, encoding="utf-8")
 
 
 
