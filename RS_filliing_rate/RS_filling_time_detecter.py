@@ -15,8 +15,8 @@ import datetime
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # 自作モジュール
-from utils.point_history_utils import replace_nan, set_dtype, parse_date
-from RS_fillingrate_test import plot_recycle_period, chi_squared_statistic, exp_func, power_law, KS_statistic, calc_recycle_period
+from utils.point_history_utils import open_point_history_per_shop, aggregate_date
+from RS_filliing_rate.RS_fillingrate_test import plot_recycle_period, chi_squared_statistic, exp_func, power_law, KS_statistic, calc_recycle_period
 
 # 浮動小数点数を小数点以下2桁で表示するように設定
 # pd.set_option('display.float_format', '{:.2f}'.format)
@@ -89,128 +89,224 @@ def plot_interval_per_hour(df, super, shop_name_1, fig_title=None):
     fig.tight_layout()
     plt.show()
 
-def open_file(super, shop_name_1): 
-    print(f'{super} {shop_name_1}')
-    df = pd.read_csv(f'data/input/shop_data/point_history_{super}_{shop_name_1}.csv', encoding="utf-8")
-    df = set_dtype(df)
-    df = replace_nan(df)
-    df = calc_recycle_period(df, super, shop_name_1)
-    #df['interval'] = calc_recycle_period(df, "みやぎ生協 ", shop_name_1)
-    return df
-
-def plot_recycle_period_per_kg(df1,df2, kg_threshold_less, kg_threshold_more, ax):
+def extract_low_recycling_days(df, kg_threshold):
     """
-    リサイクルステーション利用間隔のkg_threshold_less kg以下とkg_threshold_more kg以上のヒストグラムを比較
+    1日のリサイクル量がkg_threshold未満の日のデータ行のみ抽出する関数
     args:
-        df1: kg_threshold_less kg以下のデータ
-        df2: kg_threshold_more kg以上のデータ
-        kg_threshold_less: kg_threshold_less kg以下のデータのヒストグラムを表示
-        kg_threshold_more: kg_threshold_more kg以上のデータのヒストグラムを表示
-        ax: グラフを描画するaxes
+        df: pandas.DataFrame
+        kg_threshold: float
+    return:
+        df_low: pandas.DataFrame
     """
-    index = 0
-    counts_less, bin_edges_less = np.histogram(df1["interval_compared_to_previous"], bins=100, range=(0, 12), density=True)
-    bin_centers_less = (bin_edges_less[:-1] + bin_edges_less[1:]) / 2
-    ax.bar(bin_centers_less[index:], counts_less[index:], width=np.diff(bin_edges_less[index:]), alpha=0.5, color='blue',label=f'less than {kg_threshold_less}')
+    df_low = df.groupby(df['use_date'].dt.date)['amount_kg'].sum() 
+    df_low = df_low[df_low < kg_threshold]
+    day_list_low = df_low.index
+    df_low = df[df['use_date'].dt.date.isin(day_list_low)]
+    return df_low
 
-    counts_more, bin_edges_more = np.histogram(df2["interval_compared_to_previous"], bins=100, range=(0, 12), density=True)
-    bin_centers_more = (bin_edges_more[:-1] + bin_edges_more[1:]) / 2
-    ax.bar(bin_centers_more[index:], counts_more[index:], width=np.diff(bin_edges_more[index:]), alpha=0.5, color='red',label=f'more than {kg_threshold_more}')
+def extract_high_recycling_days(df, kg_threshold):
+    """
+    1日のリサイクル量がkg_thresholdより大きい日のデータのみ抽出する関数
+    args:
+        df: pandas.DataFrame
+        kg_threshold: float
+    return:
+        df_high: pandas.DataFrame
+    """
+    df_high = df.groupby(df['use_date'].dt.date)['amount_kg'].sum()
+    df_high = df_high[df_high >= kg_threshold]
+    day_list_high = df_high.index
+    df_high = df[df['use_date'].dt.date.isin(day_list_high)]
+    return df_high
+
+def calc_maxfilling_hour(df_low,df_high, option_graph_obj_return=False):
+    """
+    リサイクルステーションの充填率が100%になる時間を計算する関数
+    args:
+        df_low: リサイクルステーション利用間隔が短い日のみ抽出したデータフレーム
+        df_high: リサイクルステーション利用間隔が長い日のみ抽出したデータフレーム
+        option_graph_obj_return: グラフのオブジェクトを返すかどうか
+    return（option_graph_obj_returnがTrueの場合）:
+        max_filling_hour: リサイクルステーションの充填率が100%になる時間 （もしなければnp.nanを返す）
+    return (option_graph_obj_returnがFalseの場合):
+        max_filling_hour: リサイクルステーションの充填率が100%になる時間 （もしなければnp.nanを返す）
+        counts_low: リサイクルステーション利用間隔が短い日のヒストグラムの度数
+        bin_edges_low: リサイクルステーション利用間隔が短い日のヒストグラムのビンの境界
+        bin_centers_low: リサイクルステーション利用間隔が短い日のヒストグラムのビンの中心
+        counts_high: リサイクルステーション利用間隔が長い日のヒストグラムの度数
+        bin_edges_high: リサイクルステーション利用間隔が長い日のヒストグラムのビンの境界
+        bin_centers_high: リサイクルステーション利用間隔が長い日のヒストグラムのビンの中心
+        params_low: リサイクルステーション利用間隔が短い日のフィット関数のパラメータ
+        params_high: リサイクルステーション利用間隔が長い日のフィット関数のパラメータ
+        fill_index: 充填率100%とするインデックス
+    """
+    counts_low, bin_edges_low = np.histogram(df_low["interval_compared_to_previous"], bins=100, range=(0, 12), density=True)
+    bin_centers_low = (bin_edges_low[:-1] + bin_edges_low[1:]) / 2
+
+    counts_high, bin_edges_high = np.histogram(df_high["interval_compared_to_previous"], bins=100, range=(0, 12), density=True)
+    bin_centers_high = (bin_edges_high[:-1] + bin_edges_high[1:]) / 2
 
     # x軸の大きい値を重視してフィットを行う
-    mask = counts_less > 0
-    weights = 1 / bin_centers_less[mask] ** 2
+    mask = counts_low > 0
+    weights = 1 / bin_centers_low[mask] ** 2
     # 重み付きフィットを実行
     try:
         initial_guess = [2.28651235, 3.52252185]
-        params_less, params_covariance = curve_fit(exp_func, bin_centers_less[mask], counts_less[mask], sigma=weights,  maxfev=3000, p0=initial_guess)
+        params_low, params_covariance = curve_fit(exp_func, bin_centers_low[mask], counts_low[mask], sigma=weights,  maxfev=3000, p0=initial_guess)
     except RuntimeError as err:
         print("Optimal parameters not found. Using the last tried parameters.")
-        params_less = [2.28651235, 3.52252185]    # 仮の値を設定
+        params_low = [2.28651235, 3.52252185]    # 仮の値を設定
 
-    mask[exp_func(bin_centers_less, *params_less) < 0.01] = 0
-    weights = 1 / bin_centers_less[mask] ** 2
-    param_bounds = ([params_less[0], params_less[1]], [np.inf, np.inf])
-    params_more, params_covariance = curve_fit(exp_func, bin_centers_more[mask], counts_more[mask], sigma=weights,  maxfev=3000, bounds=param_bounds)
-
-    ax.plot(bin_centers_less, exp_func(bin_centers_less, *params_less)+10e-6, label=f'Fit less than {kg_threshold_less}', color='blue',alpha=0.5)
-    ax.plot(bin_centers_more, exp_func(bin_centers_more, *params_more)+10e-6, label=f'Fit more than {kg_threshold_more}', color='red', alpha=0.5)
+    mask[exp_func(bin_centers_low, *params_low) < 0.01] = 0
+    weights = 1 / bin_centers_low[mask] ** 2
+    param_bounds = ([params_low[0], params_low[1]], [np.inf, np.inf])
+    params_high, params_covariance = curve_fit(exp_func, bin_centers_high[mask], counts_high[mask], sigma=weights,  maxfev=3000, bounds=param_bounds)
 
     """
     想定される分布と乖離が大きい利用時間において、充填率100%とする
     乖離の量を表す5という数字はマジックナンバー
     """
-    fill_index = np.abs(np.log(bin_centers_more+10e-6)-np.log(exp_func(bin_centers_more, *params_more)+10e-6)) > 5  
+    fill_index = np.abs(np.log(bin_centers_high+10e-6)-np.log(exp_func(bin_centers_high, *params_high)+10e-6)) > 5  
     fill_index = np.argmax(fill_index)  # fill_indexのTrueの箇所の最小インデックスを取得
-    ax.bar(bin_centers_more[fill_index:], counts_more[fill_index:], width=np.diff(bin_edges_more[fill_index:]), alpha=0.5, color='yellow',label=f'filling rate = 100%')
+
+    if np.max(counts_high[fill_index:]) == 0:
+        max_filling_hour = np.nan
+    else:
+        max_filling_hour = bin_edges_high[fill_index]
+
+    if option_graph_obj_return:
+        return max_filling_hour ,counts_low, bin_edges_low, bin_centers_low, counts_high, bin_edges_high, bin_centers_high, params_low, params_high, fill_index
+    else:
+        return max_filling_hour
+
+def plot_recycle_period_per_kg(bin_edges_low, bin_centers_low,counts_low, bin_edges_high,bin_centers_high, counts_high, kg_threshold_low, \
+                               kg_threshold_high, params_low, params_high, fill_index, ax, super, shop_name_1):
+    """
+    リサイクルステーション利用間隔のkg_threshold_low kg以下とkg_threshold_high kg以上のヒストグラムを比較
+    args:
+        bin_edges_low: ビンの境界
+        bin_centers_low: ビンの中心
+        counts_low: ヒストグラムの度数
+        bin_edges_high: ビンの境界
+        bin_centers_high: ビンの中心
+        counts_high: ヒストグラムの度数
+        kg_threshold_low: kg_threshold_low kg以下の日のみ抽出
+        kg_threshold_high: kg_threshold_high kg以上の日のみ抽出
+        params_low: フィット関数のパラメータ
+        params_high: フィット関数のパラメータ
+        fill_index: 充填率100%とするインデックス
+        ax: サブプロット
+        super: スーパー名
+        shop_name_1: 店舗名
+    return:
+        None
+    """
+    
+    ax.bar(bin_centers_low, counts_low, width=np.diff(bin_edges_low), alpha=0.5, color='blue',label=f'low than {kg_threshold_low}')
+    ax.bar(bin_centers_high, counts_high, width=np.diff(bin_edges_high), alpha=0.5, color='red',label=f'high than {kg_threshold_high}')
+    ax.plot(bin_centers_low, exp_func(bin_centers_low, *params_low)+10e-6, label=f'Fit low than {kg_threshold_low}', color='blue',alpha=0.5)
+    ax.plot(bin_centers_high, exp_func(bin_centers_high, *params_high)+10e-6, label=f'Fit high than {kg_threshold_high}', color='red', alpha=0.5)
+    ax.bar(bin_centers_high[fill_index:], counts_high[fill_index:], width=np.diff(bin_edges_high[fill_index:]), alpha=0.5, color='yellow',label=f'filling rate = 100%')
 
     ax.set_xlabel( "Interval of Use for \n Recycling Station [h]" )
     ax.set_ylabel('Frequency')
     ax.set_xscale('log')
     ax.set_yscale('log')
+    ax.set_xlim(bin_centers_high[0], bin_centers_high[-60])
     ax.legend(loc='upper right')
+    ax.set_title(f'{super} {shop_name_1}')
+    plt.show()
+
+def calc_filling_rate(df, max_filling_hour, kg_threshold=1300, kg_threshold_2=1700):
+    """
+    各行の'filling_rate'を計算する。充填率100%とする場合は以下の通り。
+    １．1日でkg_threshold 以上リサイクル量がある & 前回のリサイクルから max_filling_hour 以上時間が空いている
+    ２．1日でkg_threshold_2 以上リサイクル量がある
+    args:
+        df: dataframe
+        max_filling_hour: float[h]
+        kg_threshold: float[kg]
+        kg_threshold_2: float[kg]
+    return:
+        df2: dataframe    
+    """
+    df_high = extract_high_recycling_days(df, kg_threshold)
+    df_high.loc[df_high['interval_compared_to_next'] > max_filling_hour, 'filling_rate'] = 1
+
+    # 'filling_rate'が1で、次の行の'use_date'が20時以降　かつ　次の行の'use_date'が同じ日の場合、その行の'filling_rate'を1にする
+    for i in df_high.index[:-1]:
+        if df_high.loc[i, 'filling_rate'] == 1:
+            next_index = df_high.index[df_high.index.get_loc(i) + 1]
+            if df_high.loc[i, 'use_date'].day == df_high.loc[next_index, 'use_date'].day and df_high.loc[next_index, 'use_date'].hour >= 20:
+                df_high.loc[next_index, 'filling_rate'] = 1
+    df2 = pd.merge(df, df_high[['use_date', 'filling_rate']], on='use_date', how='left')
+    
+    # kg_threshold_2 以上の日は最終行の'filling_rate'を1にする
+    df_high = extract_high_recycling_days(df, kg_threshold_2)
+    df_high['filling_rate'] = np.nan
+    # 次の行の'use_date'が別の日の場合、その行の'filling_rate'を1にする
+    for i in df_high.index[:-1]:
+        next_index = df_high.index[df_high.index.get_loc(i) + 1]
+        if df_high.loc[i, 'use_date'].day != df_high.loc[next_index, 'use_date'].day:
+            df_high.loc[i, 'filling_rate'] = 1
+    index_list = df_high[df_high['filling_rate'] == 1].index
+    df2.loc[index_list, 'filling_rate'] = 1
+
+    # 各行の'filling_rate'を計算する
+    aggregate_df = aggregate_date(df2)
+    for date, max_amount_kg, filling_rate in zip(aggregate_df['年月日'], aggregate_df['amount_kg'], aggregate_df['filling_rate']):
+        if filling_rate != 1.0:
+            max_amount_kg = kg_threshold_2
+        total_amount_kg_per_day = 0
+        for i in df2[df2['年月日'] == date].index:
+            total_amount_kg_per_day += df2.loc[i, 'amount_kg']
+            df2.loc[i, 'total_amount_kg_per_day'] = total_amount_kg_per_day
+            df2.loc[i, 'filling_rate'] = total_amount_kg_per_day / max_amount_kg
+    return df2
 
 if __name__ == '__main__':
-    #super = "みやぎ生協"
-    #shop_name_1 = "加賀野店"
-    super = "ヨークベニマル"
-    #shop_name_1 = "若柳店"
-    #shop_name_1 = "塩釜店"
-    #shop_name_1 = "坂東店"
-    #shop_name_1 = "大田原店"
-    shop_name_1 = "南中山店"
-
-    #plot_interval_per_hour(super, shop_name_1)
-    i = 0
     df_shop_list = pd.read_csv('data/input/shop_list.csv', encoding="utf-8")
-    for super, shop_name_1 in zip(df_shop_list['super'], df_shop_list['shop_name_1']):
-        #i += 1
-        #if i < 10:
-        #    continue
-        df = open_file(super, shop_name_1)
-        # plot_interval_per_hour(df, super, shop_name_1, fig_title=f'{super} {shop_name_1}')
+    # for super, shop_name_1 in zip(df_shop_list['super'], df_shop_list['shop_name_1']):
+    #     df = open_point_history_per_shop(super, shop_name_1)
 
-        # # 1日の総リサイクル量が500kg以下の日と1t以上の日を比較
-        kg_threshold_less = 500
-        kg_threshold_more = 1500
-        df_less = df.groupby(df['use_date'].dt.date)['amount_kg'].sum() 
-        df_less = df_less[df_less <= kg_threshold_less]
-        day_list_less = df_less.index
-        df_less = df[df['use_date'].dt.date.isin(day_list_less)]
-        df_more = df.groupby(df['use_date'].dt.date)['amount_kg'].sum()
-        df_more = df_more[df_more >= kg_threshold_more]
-        day_list_more = df_more.index
-        df_more = df[df['use_date'].dt.date.isin(day_list_more)]
+        # # # 1日の総リサイクル量が500kg以下の日と1.3t以上の日を比較
+        # kg_threshold_low = 500
+        # kg_threshold_high = 1300
+        # df_low = extract_low_recycling_days(df, kg_threshold_low)
+        # df_high = extract_high_recycling_days(df, kg_threshold_high)
 
-        if len(df_more) < 10:
-            continue
-
-        fig, ax = plt.subplots()
-        plot_recycle_period_per_kg(df_less, df_more, kg_threshold_less, kg_threshold_more, ax)
-        ax.set_title(f'{super} {shop_name_1}')
-        plt.show()
-
-        
-        # # # 1日の総リサイクル量が500kg以下の日のみ抽出
-        # kg_threshold = 500
-        # df_temp = df.groupby(df['use_date'].dt.date)['amount_kg'].sum()
-        # df_temp = df_temp[df_temp <= kg_threshold]
-        # day_list = df_temp.index
-        # df2 = df[df['use_date'].dt.date.isin(day_list)]
-        # plot_interval_per_hour(df2, super, shop_name_1, fig_title=f'{super} {shop_name_1} (Total recycle amount (per day) < {kg_threshold} kg)')
-
-        
-        # # # 1日の総リサイクル量が1.5t以上の日のみ抽出
-        # kg_threshold = 1300
-        # df_temp = df.groupby(df['use_date'].dt.date)['amount_kg'].sum()
-        # df_temp = df_temp[df_temp >= kg_threshold]
-        # day_list = df_temp.index
-        # df2 = df[df['use_date'].dt.date.isin(day_list)]
-        # if len(df_temp) < 10:
+        # if len(df_high) < 10:
+        #     print(f'{super} {shop_name_1} is not enough data')
+        #     # df_shop_listのsuper, shop_name_1が一致する行で、"max_filling_hour"という新しい列にnp.nanを代入
+        #     df_shop_list.loc[(df_shop_list['super'] == super) & (df_shop_list['shop_name_1'] == shop_name_1), 'max_filling_hour'] = np.nan
         #     continue
-        # plot_interval_per_hour(df2, super, shop_name_1, fig_title=f'{super} {shop_name_1} (Total recycle amount (per day) > {kg_threshold} kg)')
 
+        # # リサイクルステーションの充填率が100%になる時間を計算
+        # try:
+        #     max_filling_hour, counts_low, bin_edges_low, bin_centers_low, counts_high, bin_edges_high, bin_centers_high, params_low, params_high, fill_index \
+        #         = calc_maxfilling_hour(df_low,df_high, option_graph_obj_return=True)
+            
+        #     fig, ax = plt.subplots()
+        #     plot_recycle_period_per_kg(bin_edges_low, bin_centers_low,counts_low, bin_edges_high,bin_centers_high, counts_high, kg_threshold_low, \
+        #                            kg_threshold_high, params_low, params_high, fill_index, ax, super, shop_name_1)
+            
+        #     print(f'max_filling_hour: {max_filling_hour:.2f}')
+        #     # df_shop_listのsuper, shop_name_1が一致する行で、"max_filling_hour"という新しい列にmax_filling_hourを代入
+        #     df_shop_list.loc[(df_shop_list['super'] == super) & (df_shop_list['shop_name_1'] == shop_name_1), 'max_filling_hour'] = max_filling_hour
+        # except Exception as e:  # Exceptionクラスで全ての例外を全て捕捉してしまう
+        #     print(e)
+        #     df_shop_list.loc[(df_shop_list['super'] == super) & (df_shop_list['shop_name_1'] == shop_name_1), 'max_filling_hour'] = np.nan
 
+    aggregated_df = pd.DataFrame()
+    for super, shop_name_1, max_filling_hour in tqdm(zip(df_shop_list['super'], df_shop_list['shop_name_1'], df_shop_list['max_filling_hour']), total=len(df_shop_list)):
+        print(f'{super} {shop_name_1} is processing...')
+        df = open_point_history_per_shop(super, shop_name_1)
+        df = calc_filling_rate(df, max_filling_hour,kg_threshold=1300, kg_threshold_2=1700)
+        df.to_csv(f'data/input/shop_data/point_history_{super}_{shop_name_1}.csv', index=False, encoding="utf-8")
+        aggregated_df_temp = aggregate_date(df)
+        aggregated_df = pd.concat([aggregated_df, aggregated_df_temp]).reset_index(drop=True)
 
+        
+    aggregated_df.to_csv('data/input/point_history_per_shop_date2.csv', index=False, encoding="utf-8")
 
 
