@@ -80,6 +80,7 @@ def set_dtype(df):
         'interval_compared_to_previous': np.float32,
         'interval_compared_to_next': np.float32,
     }
+    column_types = {col: dtype for col, dtype in column_types.items() if col in df.columns} # dfに存在するカラムのみ型変換を適用
     df = df.astype(column_types)
     return df
 

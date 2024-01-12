@@ -231,26 +231,30 @@ def calc_filling_rate(df, max_filling_hour, kg_threshold=1300, kg_threshold_2=17
         df2: dataframe    
     """
     df_high = extract_high_recycling_days(df, kg_threshold)
-    df_high.loc[df_high['interval_compared_to_next'] > max_filling_hour, 'filling_rate'] = 1
-
-    # 'filling_rate'が1で、次の行の'use_date'が20時以降　かつ　次の行の'use_date'が同じ日の場合、その行の'filling_rate'を1にする
-    for i in df_high.index[:-1]:
-        if df_high.loc[i, 'filling_rate'] == 1:
-            next_index = df_high.index[df_high.index.get_loc(i) + 1]
-            if df_high.loc[i, 'use_date'].day == df_high.loc[next_index, 'use_date'].day and df_high.loc[next_index, 'use_date'].hour >= 20:
-                df_high.loc[next_index, 'filling_rate'] = 1
-    df2 = pd.merge(df, df_high[['use_date', 'filling_rate']], on='use_date', how='left')
+    if len(df_high[df_high['interval_compared_to_next'] > max_filling_hour]) > 0:
+        df_high.loc[df_high['interval_compared_to_next'] > max_filling_hour, 'filling_rate'] = 1
+        # 'filling_rate'が1で、次の行の'use_date'が20時以降　かつ　次の行の'use_date'が同じ日の場合、その行の'filling_rate'を1にする
+        for i in df_high.index[:-1]:
+            if df_high.loc[i, 'filling_rate'] == 1:
+                next_index = df_high.index[df_high.index.get_loc(i) + 1]
+                if df_high.loc[i, 'use_date'].day == df_high.loc[next_index, 'use_date'].day and df_high.loc[next_index, 'use_date'].hour >= 20:
+                    df_high.loc[next_index, 'filling_rate'] = 1
+        df2 = pd.merge(df, df_high[['use_date', 'filling_rate']], on='use_date', how='left')
+    else:
+        df2 = df.copy()
+        df2['filling_rate'] = np.nan
     
     # kg_threshold_2 以上の日は最終行の'filling_rate'を1にする
     df_high = extract_high_recycling_days(df, kg_threshold_2)
-    df_high['filling_rate'] = np.nan
-    # 次の行の'use_date'が別の日の場合、その行の'filling_rate'を1にする
-    for i in df_high.index[:-1]:
-        next_index = df_high.index[df_high.index.get_loc(i) + 1]
-        if df_high.loc[i, 'use_date'].day != df_high.loc[next_index, 'use_date'].day:
-            df_high.loc[i, 'filling_rate'] = 1
-    index_list = df_high[df_high['filling_rate'] == 1].index
-    df2.loc[index_list, 'filling_rate'] = 1
+    if len(df_high) > 0:
+        df_high['filling_rate'] = np.nan
+        # 次の行の'use_date'が別の日の場合、その行の'filling_rate'を1にする
+        for i in df_high.index[:-1]:
+            next_index = df_high.index[df_high.index.get_loc(i) + 1]
+            if df_high.loc[i, 'use_date'].day != df_high.loc[next_index, 'use_date'].day:
+                df_high.loc[i, 'filling_rate'] = 1
+        index_list = df_high[df_high['filling_rate'] == 1].index
+        df2.loc[index_list, 'filling_rate'] = 1
 
     # 各行の'filling_rate'を計算する
     aggregate_df = aggregate_date(df2)
@@ -297,9 +301,13 @@ if __name__ == '__main__':
         #     print(e)
         #     df_shop_list.loc[(df_shop_list['super'] == super) & (df_shop_list['shop_name_1'] == shop_name_1), 'max_filling_hour'] = np.nan
 
+    i = 0
     aggregated_df = pd.DataFrame()
     for super, shop_name_1, max_filling_hour in tqdm(zip(df_shop_list['super'], df_shop_list['shop_name_1'], df_shop_list['max_filling_hour']), total=len(df_shop_list)):
         print(f'{super} {shop_name_1} is processing...')
+        if i < 20:
+            i += 1
+            continue
         df = open_point_history_per_shop(super, shop_name_1)
         df = calc_filling_rate(df, max_filling_hour,kg_threshold=1300, kg_threshold_2=1700)
         df.to_csv(f'data/input/shop_data/point_history_{super}_{shop_name_1}.csv', index=False, encoding="utf-8")
