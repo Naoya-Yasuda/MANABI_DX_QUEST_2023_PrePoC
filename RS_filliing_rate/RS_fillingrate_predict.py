@@ -72,9 +72,10 @@ print(f'Root Mean Squared Error (RMSE): {rmse}')
 print(f'R-squared (R2): {r2}')
 
 print("actual")
-print(y_test[:10])
+print(y_test[:10].values)
 print("pred")
 print(y_pred[:10])
+
 
 
 
