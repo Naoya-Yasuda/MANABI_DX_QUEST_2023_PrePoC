@@ -150,7 +150,7 @@ if __name__ == "__main__":
     'boosting_type': 'gbdt',
     'seed': 0,
     'early_stopping_rounds' : 1000,
-    'num_iterations' : 1000,
+    'num_iterations' : 10000,
     'learning_rate' : 0.02,
     'max_depth': 8,
     }
