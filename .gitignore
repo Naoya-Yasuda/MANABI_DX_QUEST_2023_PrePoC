@@ -20,3 +20,6 @@ prediction_waste_paper_amount_norosen.ipynb
 
 # バックグラウンド実行時のログファイルを無視
 nohup.out
+
+# Spark用ディレクトリを無視
+spark/
