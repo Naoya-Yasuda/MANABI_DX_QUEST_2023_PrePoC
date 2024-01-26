@@ -61,9 +61,6 @@ referencesフォルダには、2回回収日やリサイクルステーション
 ### appendices
 データ定義書などの付録データ、その他受領したxlsxやpdfファイルを保存します。
 
-## features
-featuresフォルダには、train/testから作成した各特徴量を保存しています。
-
 ## logs
 logsフォルダには、計算の実行ごとに下記の情報などを出力しています。ファイル名は「log_(year-month-day-hour-min).log」のように設定し、前述した通り提出用のcsvファイルと照合できるようにしています。
 
@@ -83,11 +80,9 @@ RS_filling_rateフォルダでは、充填率予測に向けたコードを配�
 2. RS_fillingrate_test.py
 3. RS_filling_time_detecter.py
 
+visualizationと先頭に付くファイルは、データ可視化用のファイルです。
+実行の有無は他のファイルに影響を与えません。
 
-## 利用した特徴量
-- trainのshape
-- 学習器のパラメータ
-- cvのスコア
 
 ## 参考
 [upuraのブログ](https://upura.hatenablog.com/entry/2018/12/28/225234)
