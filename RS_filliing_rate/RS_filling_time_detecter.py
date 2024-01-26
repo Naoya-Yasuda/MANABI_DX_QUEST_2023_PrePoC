@@ -305,9 +305,6 @@ if __name__ == '__main__':
     aggregated_df = pd.DataFrame()
     for super, shop_name_1, max_filling_hour in tqdm(zip(df_shop_list['super'], df_shop_list['shop_name_1'], df_shop_list['max_filling_hour']), total=len(df_shop_list)):
         print(f'{super} {shop_name_1} is processing...')
-        if i < 20:
-            i += 1
-            continue
         df = open_point_history_per_shop(super, shop_name_1)
         df = calc_filling_rate(df, max_filling_hour,kg_threshold=1300, kg_threshold_2=1700)
         df.to_csv(f'data/input/shop_data/point_history_{super}_{shop_name_1}.csv', index=False, encoding="utf-8")

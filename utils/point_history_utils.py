@@ -153,8 +153,7 @@ def aggregate_shop_date(df):
     df = set_dtype(df)
     df = replace_nan(df)
 
-    # shop_idと年月日ごとにグループ化し、合計値と代表値を計算
-    aggregated_df = df.groupby(['shop_id', '年月日']).agg({
+    aggregation_columns = {
         'amount': 'sum',
         'amount_kg': 'sum',
         'point': 'sum',
@@ -176,7 +175,6 @@ def aggregate_shop_date(df):
         'rps_closing_time': 'first',
         'store_latitude': 'first',
         'store_longitude': 'first',
-        '年月日': 'first',
         '天気': 'first',
         '平均気温(℃)': 'first',
         '最高気温(℃)': 'first',
@@ -191,7 +189,13 @@ def aggregate_shop_date(df):
         '合計全天日射量(MJ/㎡)': 'first',
         'interval_compared_to_previous': 'first',
         'interval_compared_to_next': 'first',
-    }).reset_index()
+    }
+
+    # 存在する列のみを選択
+    existing_columns = {col: agg_method for col, agg_method in aggregation_columns.items() if col in df.columns}
+
+    # shop_idと年月日ごとにグループ化し、合計値と代表値を計算
+    aggregated_df = df.groupby(['shop_id', '年月日']).agg(existing_columns).reset_index()
 
     # shop_idと年月日でソート
     aggregated_df = aggregated_df.sort_values(by=['shop_id', '年月日'])

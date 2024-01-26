@@ -74,8 +74,7 @@ def set_previous_data(df, features, days=28, years=0):
 
     return df
 
-def prepare_data(filepath):
-    df = pd.read_csv(filepath, encoding='utf-8')
+def arrange_df(df):
     df = set_dtype(df)
     df = replace_nan(df)
     df = add_date_features(df)
@@ -94,6 +93,7 @@ def train_lightgbm(X_train, y_train, X_test, lgb_params):
     model = lgb.train(lgb_params, train_data, valid_sets=test_data)
     y_pred = model.predict(X_test, num_iteration=model.best_iteration)
     return model
+
 
 def evaluate_model(model, X_test, y_test):
     y_pred = model.predict(X_test)
@@ -132,7 +132,8 @@ if __name__ == "__main__":
     np.random.seed(SEED)
     random.seed(SEED)
 
-    df = prepare_data('data/input/point_history_per_shop_date.csv')
+    df = pd.read_csv('data/input/point_history_per_shop_date.csv', encoding='utf-8')
+    df = arrange_df(df)
     columns_to_drop = ['shop_id', 'shop_name', 'shop_id_1', 'リサイクル分類ID', '支店ID', 'store_opening_time',
                        'store_closing_time', 'rps_opening_time', 'rps_closing_time', '年月日', 'interval_compared_to_next',
                        'amount', 'amount_kg', 'point', 'total_point', 'total_amount', 'coin', 'interval_compared_to_previous',
