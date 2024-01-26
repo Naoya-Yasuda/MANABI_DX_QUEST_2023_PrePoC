@@ -47,13 +47,19 @@ jsonファイルで、諸設定を記載しています。
 またコンペのデータに依存するカラム名なども、このjsonファイルから読み取る形式にしています。
 
 ## data
-dataフォルダは、input/outputに分けています。
+dataフォルダは、input/output/references/appendicesに分けています。
 
-## input
+### input
 inputフォルダには、元データのcsvファイルや、クレンジング後のcsvファイルを配置しています。
 
-## output
-outputフォルダには、提出用のcsvファイルを出力します。ファイル名は「sub_(year-month-day-hour-min)_(score)」のように設定し、後述するログと照合できるようにしています。
+### output
+outputフォルダには、モデルの予測結果をcsvファイルとして出力します。
+
+### references
+referencesフォルダには、2回回収日やリサイクルステーションが少ない店など、参照用データを保存します。
+
+### appendices
+データ定義書などの付録データ、その他受領したxlsxやpdfファイルを保存します。
 
 ## features
 featuresフォルダには、train/testから作成した各特徴量を保存しています。

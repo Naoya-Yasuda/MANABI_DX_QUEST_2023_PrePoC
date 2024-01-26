@@ -15,64 +15,12 @@ import random
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # 自作モジュール
-from utils.point_history_utils import open_point_history_per_shop, aggregate_date, replace_nan, set_dtype
+from utils.point_history_utils import open_point_history_per_shop, aggregate_date, replace_nan, set_dtype, add_date_features, set_previous_data
 from RS_filliing_rate.RS_fillingrate_test import plot_recycle_period, chi_squared_statistic, exp_func, power_law, KS_statistic, calc_recycle_period
 
 
 plt.rcParams['font.family'] = 'Meiryo'
 
-
-# 日付特徴量の追加
-def add_date_features(df):
-    df = df.copy()
-    df["month"] = df["年月日"].dt.month
-    df["day"] = df["年月日"].dt.day
-    df["year"] = df["年月日"].dt.year
-    df['day_of_week'] = df['年月日'].dt.day_name()
-
-    df["day_sin"] = np.sin(df["day"] / 31 * 2* np.pi)
-    df["day_cos"] = np.cos(df["day"] / 31 * 2* np.pi)
-    df.drop(columns=["day"], inplace=True)
-    
-    df["month_sin"] = np.sin(df["month"] / 12 * 2* np.pi)
-    df["month_cos"] = np.cos(df["month"] / 12 * 2* np.pi)
-    df.drop(columns=["month"], inplace=True)
-    return df
-
-
-def set_previous_data(df, features, days=28, years=0):
-    """
-    指定された日数または年数前の特徴量の値を取得する関数。
-    ※年数と日数のどちらか一方のみ指定可能。
-    args:
-        df: データフレーム
-        features: 特徴量のリスト
-        days: 日数（デフォルトは28）
-        years: 年数（デフォルトは0）
-    return:
-        df: 更新されたデータフレーム
-    """
-    # 日付の計算
-    if years > 0:
-        df['date_previous'] = df['年月日'].apply(lambda x: x - relativedelta(years=years))
-        time_label = str(years) + 'years'
-    else:
-        df['date_previous'] = df['年月日'] - pd.Timedelta(days=days)
-        time_label = str(days) + 'days'
-
-    for feature in features:
-        new_feature = feature + '_before_' + time_label
-        # 一時的なデータフレームを作成
-        temp_df = df[['年月日', 'super', 'shop_name_1', feature]].copy()
-        temp_df.rename(columns={'年月日': 'date_previous', feature: new_feature}, inplace=True)
-
-        # 元のデータフレームに一時的なデータフレームをマージ
-        df = df.merge(temp_df, on=['super', 'shop_name_1', 'date_previous'], how='left')
-
-    # 不要な列を削除
-    df.drop('date_previous', axis=1, inplace=True)
-
-    return df
 
 def arrange_df(df):
     df = set_dtype(df)

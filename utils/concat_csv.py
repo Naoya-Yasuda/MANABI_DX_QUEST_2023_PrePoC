@@ -15,4 +15,4 @@ for file in files:
     df = pd.concat([df, pd.read_csv(file, encoding='utf-8')], ignore_index=True)
 
 # CSVファイルに保存
-df.to_csv('data/input/reference/RS_twice_day.csv', index=False, encoding='utf-8')
+df.to_csv('data/references/RS_twice_collection_day.csv', index=False, encoding='utf-8')
