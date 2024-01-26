@@ -4,6 +4,8 @@ data/*
 # ただし、.gitkeepファイルはGithubにアップロード
 !data/input/.gitkeep
 !data/output/.gitkeep
+!data/references/.gitkeep
+!data/appendices/.gitkeep
 
 # Macの隠しフォルダを除外
 .DS_Store
