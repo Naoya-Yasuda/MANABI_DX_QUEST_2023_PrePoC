@@ -15,6 +15,7 @@ data/*
 *-checkpoint.ipynb
 try_rank_personalization_norosen個人解析用.ipynb
 prediction_waste_paper_amount_norosen.ipynb
+*/__pycache__/*
 
 
 # .envファイルを無視
@@ -25,3 +26,4 @@ nohup.out
 
 # Spark用ディレクトリを無視
 spark/
+notebook/github連携.ipynb

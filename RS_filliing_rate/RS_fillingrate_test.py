@@ -62,6 +62,7 @@ def plot_recycle_period(interval, super_name, shop_name, ax, func):
     """
     # ヒストグラムのデータを取得
     counts, bin_edges = np.histogram(interval, bins=100, range=(0, 12))
+    #counts, bin_edges = np.histogram(interval, bins=100, range=(0, 12), density=True)
     bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
 
     # x軸の大きい値を重視してべき乗則のフィットを行う
@@ -78,7 +79,7 @@ def plot_recycle_period(interval, super_name, shop_name, ax, func):
 
     # フィット結果をプロット
     ax.bar(bin_centers, counts, width=np.diff(bin_edges), label='Data')
-    ax.plot(bin_centers, func(bin_centers, *params), label='Fit: a=%.2f, b=%.2f' % tuple(params), color='red')
+    ax.plot(bin_centers, func(bin_centers, *params) + 10e-4, label='Fit: a=%.2f, b=%.2f' % tuple(params), color='red')
     ax.set_xlabel( "Interval of Use for \n Recycling Station [h]" )
     ax.set_ylabel('Frequency')
     ax.set_xscale('log')

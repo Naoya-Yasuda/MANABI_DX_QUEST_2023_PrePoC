@@ -15,7 +15,7 @@ import datetime
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # 自作モジュール
-from utils.point_history_utils import open_point_history_per_shop, aggregate_date
+from utils.point_history_utils import open_point_history_per_shop, aggregate_date, extract_low_recycling_days, extract_high_recycling_days, set_dtype
 from RS_filliing_rate.RS_fillingrate_test import plot_recycle_period, chi_squared_statistic, exp_func, power_law, KS_statistic, calc_recycle_period
 
 # 浮動小数点数を小数点以下2桁で表示するように設定
@@ -89,35 +89,7 @@ def plot_interval_per_hour(df, super, shop_name_1, fig_title=None):
     fig.tight_layout()
     plt.show()
 
-def extract_low_recycling_days(df, kg_threshold):
-    """
-    1日のリサイクル量がkg_threshold未満の日のデータ行のみ抽出する関数
-    args:
-        df: pandas.DataFrame
-        kg_threshold: float
-    return:
-        df_low: pandas.DataFrame
-    """
-    df_low = df.groupby(df['use_date'].dt.date)['amount_kg'].sum() 
-    df_low = df_low[df_low < kg_threshold]
-    day_list_low = df_low.index
-    df_low = df[df['use_date'].dt.date.isin(day_list_low)]
-    return df_low
 
-def extract_high_recycling_days(df, kg_threshold):
-    """
-    1日のリサイクル量がkg_thresholdより大きい日のデータのみ抽出する関数
-    args:
-        df: pandas.DataFrame
-        kg_threshold: float
-    return:
-        df_high: pandas.DataFrame
-    """
-    df_high = df.groupby(df['use_date'].dt.date)['amount_kg'].sum()
-    df_high = df_high[df_high >= kg_threshold]
-    day_list_high = df_high.index
-    df_high = df[df['use_date'].dt.date.isin(day_list_high)]
-    return df_high
 
 def calc_maxfilling_hour(df_low,df_high, option_graph_obj_return=False):
     """
@@ -217,16 +189,18 @@ def plot_recycle_period_per_kg(bin_edges_low, bin_centers_low,counts_low, bin_ed
     ax.set_title(f'{super} {shop_name_1}')
     plt.show()
 
-def calc_filling_rate(df, max_filling_hour, kg_threshold=1300, kg_threshold_2=1700):
+def calc_filling_rate(df, max_filling_hour, kg_threshold=1300, kg_threshold_2=1500, kg_threshold_3=2500):
     """
     各行の'filling_rate'を計算する。充填率100%とする場合は以下の通り。
     １．1日でkg_threshold 以上リサイクル量がある & 前回のリサイクルから max_filling_hour 以上時間が空いている
-    ２．1日でkg_threshold_2 以上リサイクル量がある
+    ２．1日でkg_threshold_2 以上リサイクル量がある（1回回収日の場合）
+    ３．1日でkg_threshold_3 以上リサイクル量がある（2回回収日の場合）
     args:
         df: dataframe
         max_filling_hour: float[h]
         kg_threshold: float[kg]
         kg_threshold_2: float[kg]
+        kg_threshold_3: float[kg]
     return:
         df2: dataframe    
     """
@@ -244,8 +218,20 @@ def calc_filling_rate(df, max_filling_hour, kg_threshold=1300, kg_threshold_2=17
         df2 = df.copy()
         df2['filling_rate'] = np.nan
     
-    # kg_threshold_2 以上の日は最終行の'filling_rate'を1にする
-    df_high = extract_high_recycling_days(df, kg_threshold_2)
+    # kg_threshold_2 以上の1回回収日は最終行の'filling_rate'を1にする
+    df_high = extract_high_recycling_days(df2[(df2['twice_collected_flag'] != 1) | pd.isnull(df2['twice_collected_flag'])], kg_threshold_2)
+    if len(df_high) > 0:
+        df_high['filling_rate'] = np.nan
+        # 次の行の'use_date'が別の日の場合、その行の'filling_rate'を1にする
+        for i in df_high.index[:-1]:
+            next_index = df_high.index[df_high.index.get_loc(i) + 1]
+            if df_high.loc[i, 'use_date'].day != df_high.loc[next_index, 'use_date'].day:
+                df_high.loc[i, 'filling_rate'] = 1
+        index_list = df_high[df_high['filling_rate'] == 1].index
+        df2.loc[index_list, 'filling_rate'] = 1
+
+    # kg_threshold_3 以上の2回回収日は最終行の'filling_rate'を1にする
+    df_high = extract_high_recycling_days(df[df['twice_collected_flag'] == 1], kg_threshold_3)
     if len(df_high) > 0:
         df_high['filling_rate'] = np.nan
         # 次の行の'use_date'が別の日の場合、その行の'filling_rate'を1にする
@@ -258,18 +244,44 @@ def calc_filling_rate(df, max_filling_hour, kg_threshold=1300, kg_threshold_2=17
 
     # 各行の'filling_rate'を計算する
     aggregate_df = aggregate_date(df2)
-    for date, max_amount_kg, filling_rate in zip(aggregate_df['年月日'], aggregate_df['amount_kg'], aggregate_df['filling_rate']):
-        if filling_rate != 1.0:
+    for date, max_amount_kg, filling_rate, twice_collection_day in zip(aggregate_df['年月日'], aggregate_df['amount_kg'], aggregate_df['filling_rate'], aggregate_df['twice_collected_flag']):
+        if (filling_rate != 1.0) and (twice_collection_day == 0 or pd.isnull(twice_collection_day)):
             max_amount_kg = kg_threshold_2
+        elif (filling_rate != 1.0) and  (twice_collection_day == 1):
+            max_amount_kg = kg_threshold_3
         total_amount_kg_per_day = 0
         for i in df2[df2['年月日'] == date].index:
             total_amount_kg_per_day += df2.loc[i, 'amount_kg']
-            df2.loc[i, 'total_amount_kg_per_day'] = total_amount_kg_per_day
             df2.loc[i, 'filling_rate'] = total_amount_kg_per_day / max_amount_kg
     return df2
 
 if __name__ == '__main__':
     df_shop_list = pd.read_csv('data/input/shop_list.csv', encoding="utf-8")
+
+    i = 0
+    aggregated_df = pd.DataFrame()
+    for super_name, shop_name_1, max_filling_hour in tqdm(zip(df_shop_list['super'], df_shop_list['shop_name_1'], df_shop_list['max_filling_hour']), total=len(df_shop_list)):
+        print(f'{super_name} {shop_name_1} is processing...')
+        df = open_point_history_per_shop(super_name, shop_name_1)
+        if 'twice_collected_flag' in df.columns:
+            df.drop('twice_collected_flag', axis=1, inplace=True)
+
+        df.drop('filling_rate', axis=1, inplace=True)
+        df_twice_collection_day = pd.read_csv('data/references/RS_twice_collection_day.csv', encoding='utf-8')
+        df_twice_collection_day["年月日"] = pd.to_datetime(df_twice_collection_day["年月日"])
+        df_twice_collection_day.fillna(0,inplace=True)
+        df = pd.merge(df, df_twice_collection_day, on=["super", "shop_name_1", "年月日"], how="left")
+
+        df = calc_filling_rate(df, max_filling_hour,kg_threshold=1000, kg_threshold_2=1500, kg_threshold_3=2500)
+        df.to_csv(f'data/input/shop_data/point_history_{super_name}_{shop_name_1}.csv', index=False, encoding="utf-8")
+        aggregated_df_temp = aggregate_date(df)
+        aggregated_df = pd.concat([aggregated_df, aggregated_df_temp]).reset_index(drop=True)
+
+        
+    aggregated_df.to_csv('data/input/point_history_per_shop_date.csv', index=False, encoding="utf-8")
+
+
+
     # for super, shop_name_1 in zip(df_shop_list['super'], df_shop_list['shop_name_1']):
     #     df = open_point_history_per_shop(super, shop_name_1)
 
@@ -300,18 +312,3 @@ if __name__ == '__main__':
         # except Exception as e:  # Exceptionクラスで全ての例外を全て捕捉してしまう
         #     print(e)
         #     df_shop_list.loc[(df_shop_list['super'] == super) & (df_shop_list['shop_name_1'] == shop_name_1), 'max_filling_hour'] = np.nan
-
-    i = 0
-    aggregated_df = pd.DataFrame()
-    for super, shop_name_1, max_filling_hour in tqdm(zip(df_shop_list['super'], df_shop_list['shop_name_1'], df_shop_list['max_filling_hour']), total=len(df_shop_list)):
-        print(f'{super} {shop_name_1} is processing...')
-        df = open_point_history_per_shop(super, shop_name_1)
-        df = calc_filling_rate(df, max_filling_hour,kg_threshold=1300, kg_threshold_2=1700)
-        df.to_csv(f'data/input/shop_data/point_history_{super}_{shop_name_1}.csv', index=False, encoding="utf-8")
-        aggregated_df_temp = aggregate_date(df)
-        aggregated_df = pd.concat([aggregated_df, aggregated_df_temp]).reset_index(drop=True)
-
-        
-    aggregated_df.to_csv('data/input/point_history_per_shop_date2.csv', index=False, encoding="utf-8")
-
-

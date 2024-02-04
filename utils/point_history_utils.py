@@ -79,6 +79,7 @@ def set_dtype(df):
         '合計全天日射量(MJ/㎡)': np.float32,
         'interval_compared_to_previous': np.float32,
         'interval_compared_to_next': np.float32,
+        'twice_collected_flag' : np.float32,
     }
     column_types = {col: dtype for col, dtype in column_types.items() if col in df.columns} # dfに存在するカラムのみ型変換を適用
     df = df.astype(column_types)
@@ -126,17 +127,17 @@ def delete_blank_from_filename(directory):
         print(f"Renamed '{old_file}' to '{new_file}'")
 
 
-def open_point_history_per_shop(super, shop_name_1): 
+def open_point_history_per_shop(super_name, shop_name): 
     """
     店舗ごとに分けたpoint_historyファイルを開く関数
     args:
-        super: スーパー名
-        shop_name_1: 店舗名
+        super_name: スーパー名
+        shop_name: 店舗名
     return:
         df: pandas.DataFrame
     """
 
-    df = pd.read_csv(f'data/input/shop_data/point_history_{super}_{shop_name_1}.csv', encoding="utf-8")
+    df = pd.read_csv(f'data/input/shop_data/point_history_{super_name}_{shop_name}.csv', encoding="utf-8")
     df = set_dtype(df)
     df = replace_nan(df)
     return df
@@ -224,6 +225,7 @@ def aggregate_date(df):
         'coin': 'sum',
         'shop_id' : 'first',
         'shop_name': 'first',
+        'use_date': 'last',
         'リサイクル分類ID': 'first',
         '支店ID': 'first',
         'super': 'first',
@@ -256,10 +258,10 @@ def aggregate_date(df):
     # 'filling_rate' 列が存在する場合のみ追加
     if 'filling_rate' in df.columns:
         aggregation['filling_rate'] = 'max'
-
-    # 'total_amount_kg_per_day' 列が存在する場合のみ追加
-    if 'total_amount_kg_per_day' in df.columns:
-        aggregation['total_amount_kg_per_day'] = 'max'
+        
+    # 'filling_rate' 列が存在する場合のみ追加
+    if 'twice_collected_flag' in df.columns:
+        aggregation['twice_collected_flag'] = 'first'
 
     # shop_idと年月日ごとにグループ化し、合計値と代表値を計算
     aggregated_df = df.groupby(['年月日']).agg(aggregation).reset_index()
@@ -320,3 +322,34 @@ def set_previous_data(df, features, days=28, years=0):
     df.drop('date_previous', axis=1, inplace=True)
 
     return df
+
+
+def extract_low_recycling_days(df, kg_threshold):
+    """
+    1日のリサイクル量がkg_threshold未満の日のデータ行のみ抽出する関数
+    args:
+        df: pandas.DataFrame
+        kg_threshold: float
+    return:
+        df_low: pandas.DataFrame
+    """
+    df_low = df.groupby(df['use_date'].dt.date)['amount_kg'].sum() 
+    df_low = df_low[df_low < kg_threshold]
+    day_list_low = df_low.index
+    df_low = df[df['use_date'].dt.date.isin(day_list_low)]
+    return df_low
+
+def extract_high_recycling_days(df, kg_threshold):
+    """
+    1日のリサイクル量がkg_thresholdより大きい日のデータのみ抽出する関数
+    args:
+        df: pandas.DataFrame
+        kg_threshold: float
+    return:
+        df_high: pandas.DataFrame
+    """
+    df_high = df.groupby(df['use_date'].dt.date)['amount_kg'].sum()
+    df_high = df_high[df_high >= kg_threshold]
+    day_list_high = df_high.index
+    df_high = df[df['use_date'].dt.date.isin(day_list_high)]
+    return df_high

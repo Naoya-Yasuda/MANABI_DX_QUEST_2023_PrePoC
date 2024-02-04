@@ -64,6 +64,11 @@ referencesフォルダには、2回回収日やリサイクルステーション
 ## logs
 logsフォルダには、計算の実行ごとに下記の情報などを出力しています。ファイル名は「log_(year-month-day-hour-min).log」のように設定し、前述した通り提出用のcsvファイルと照合できるようにしています。
 
+## models
+modelフォルダには、学習器を保存します。
+{施策名}_{model名}_{評価指標}_{評価指標値}.pkl
+
+
 ## notebook
 notebookフォルダには、探索的データ分析などで利用したJupyter Notebookを配置しています。ここで試行錯誤した結果を、適切なフォルダ内のpythonファイルに取り込んでいきます。
 
@@ -79,9 +84,10 @@ RS_filling_rateフォルダでは、充填率予測に向けたコードを配�
 1. weather_data_fetcher.py
 2. RS_fillingrate_test.py
 3. RS_filling_time_detecter.py
+4. RS_fillingrate_ROI.py
 
-visualizationと先頭に付くファイルは、データ可視化用のファイルです。
-実行の有無は他のファイルに影響を与えません。
+下記ファイルは他のファイルに影響を与えません。  
+visualizationと先頭に付くファイル：データ可視化用のファイル  
 
 
 ## 参考
